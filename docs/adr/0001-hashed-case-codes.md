@@ -1,0 +1,3 @@
+# Hashed Case Codes for Zero-Knowledge Tracking
+
+To protect whistleblower confidentiality even in the event of an internal database compromise or rogue database administrator, we decided to store only the SHA-256 hash of the case code in the database rather than the plaintext token. The reporter is issued the plain case code once upon report submission, and any subsequent status inquiries or dead-drop messages require the reporter to present the code, which the backend hashes in-memory to look up the matching record. This trade-off prevents prefix search and direct database-level case resolution, but guarantees that possession of the database alone does not grant access to individual report channels.
