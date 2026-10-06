@@ -72,3 +72,28 @@ async def test_track_hashing_verification(client, db_session):
     resp = await client.get(f"/api/v1/reports/track/{case_code}")
     assert resp.status_code == 200
     assert resp.json()["category"] == "TECHNICAL"
+
+
+@pytest.mark.asyncio
+async def test_track_report_with_status_note(client, db_session):
+    """Tracking includes status_note if one has been set."""
+    from app.case_codes import hash_case_code
+    from app.models import Report
+
+    resp = await client.post(
+        "/api/v1/reports",
+        json={"category": "SECURITY", "description": "Security report with note."},
+    )
+    case_code = resp.json()["case_code"]
+
+    # Manually attach a status_note to simulate moderator activity
+    report = db_session.query(Report).filter(
+        Report.hashed_case_code == hash_case_code(case_code)
+    ).first()
+    report.status_note = "Under active review by IT security."
+    db_session.commit()
+
+    resp = await client.get(f"/api/v1/reports/track/{case_code}")
+    assert resp.status_code == 200
+    assert resp.json()["status_note"] == "Under active review by IT security."
+

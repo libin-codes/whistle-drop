@@ -2,8 +2,9 @@
 
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class CategoryIn(str, Enum):
@@ -19,6 +20,20 @@ class ReportCreate(BaseModel):
     description: str = Field(min_length=1)
     evidence_url: str | None = None
 
+    @field_validator("category", mode="before")
+    @classmethod
+    def normalize_category(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            return v.upper()
+        return v
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Description cannot be blank.")
+        return v
+
 
 class ReportCreated(BaseModel):
     case_code: str = Field(
@@ -32,6 +47,7 @@ class ReportStatus(BaseModel):
 
     category: str
     status: str
+    status_note: str | None = None
     created_at: datetime
     updated_at: datetime
 

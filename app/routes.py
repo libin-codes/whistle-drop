@@ -70,13 +70,16 @@ async def upload_evidence(file: UploadFile):
     # Strip EXIF metadata in-memory by re-encoding through Pillow
     try:
         image = Image.open(BytesIO(contents))
+        image.load()
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid image file.")
 
+    img_format = image.format or "PNG"
+    if img_format == "JPEG" and image.mode in ("RGBA", "LA", "P"):
+        image = image.convert("RGB")
+
     # Create a clean image without metadata
     clean_buffer = BytesIO()
-    # Use the original format, falling back to PNG
-    img_format = image.format or "PNG"
     image.save(clean_buffer, format=img_format)
     clean_data = clean_buffer.getvalue()
 
@@ -112,6 +115,7 @@ def track_report(
     return ReportStatus(
         category=report.category.value,
         status=report.status.value,
+        status_note=report.status_note,
         created_at=report.created_at,
         updated_at=report.updated_at,
     )

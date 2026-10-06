@@ -120,3 +120,15 @@ async def test_upload_uuid_filename(client):
         r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
         name_part,
     )
+
+
+@pytest.mark.asyncio
+async def test_upload_corrupted_image_returns_400(client):
+    """Corrupted image payload claiming to be JPEG returns 400."""
+    resp = await client.post(
+        "/api/v1/evidence/upload",
+        files={"file": ("corrupt.jpg", b"not-a-real-jpeg-image-bytes", "image/jpeg")},
+    )
+    assert resp.status_code == 400
+    assert "Invalid image file" in resp.json()["detail"]
+

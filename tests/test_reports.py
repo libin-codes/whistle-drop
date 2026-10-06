@@ -99,3 +99,24 @@ async def test_create_report_empty_body(client):
     """Empty body returns 422."""
     resp = await client.post("/api/v1/reports", json={})
     assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_report_case_insensitive_category(client):
+    """Categories supplied in mixed/lower case are normalized."""
+    resp = await client.post(
+        "/api/v1/reports",
+        json={"category": "Security", "description": "Normalized category test."},
+    )
+    assert resp.status_code == 201
+
+
+@pytest.mark.asyncio
+async def test_create_report_whitespace_only_description(client):
+    """Whitespace-only description returns 422."""
+    resp = await client.post(
+        "/api/v1/reports",
+        json={"category": "SECURITY", "description": "   \n\t  "},
+    )
+    assert resp.status_code == 422
+
