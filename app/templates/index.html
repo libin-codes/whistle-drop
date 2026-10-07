@@ -10,12 +10,46 @@
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
 <div class="container">
-    <div class="header">
-        <h1>🛡️ WhistleDrop</h1>
-        <p>Confidential, zero-knowledge anonymous reporting & secure dead drop communication.</p>
-    </div>
+    <header class="header">
+        <div class="header-top">
+            <div class="brand">
+                <h1>🛡️ WhistleDrop</h1>
+                <p>Confidential, zero-knowledge anonymous reporting & secure dead drop communication.</p>
+            </div>
+            <div class="header-actions">
+                <!-- Unauthenticated State: Outline Moderator Login button -->
+                <div id="unauth-header-actions">
+                    <button type="button" class="btn btn-outline" id="btn-open-mod-login" onclick="openLoginModal()" aria-haspopup="dialog">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
+                        Moderator Login
+                    </button>
+                </div>
+                <!-- Authenticated State: Badge, Segmented Toggle & Logout -->
+                <div id="auth-header-actions" class="header-auth-controls hidden">
+                    <div class="segmented-control" id="workspace-toggle" role="tablist" aria-label="Workspace View">
+                        <button type="button" class="segmented-btn active" id="btn-view-whistleblower" onclick="switchWorkspace('whistleblower')" role="tab" aria-selected="true">
+                            Whistleblower View
+                        </button>
+                        <button type="button" class="segmented-btn" id="btn-view-triage" onclick="switchWorkspace('triage')" role="tab" aria-selected="false">
+                            Triage Workspace
+                        </button>
+                    </div>
+                    <div class="mod-identity-badge" id="mod-identity-badge">
+                        <span class="badge badge-moderator" id="mod-badge">
+                            <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            Moderator: <span id="mod-badge-username">moderator</span>
+                        </span>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-mod-logout" onclick="modLogout()" title="Log out of Moderator Portal">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    <div class="tabs">
+    <div class="tabs" id="public-tabs">
         <button class="tab-btn active" id="tab-btn-submit" onclick="switchTab('submit')">
             <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             Submit Report
@@ -23,10 +57,6 @@
         <button class="tab-btn" id="tab-btn-track" onclick="switchTab('track')">
             <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             Track Report
-        </button>
-        <button class="tab-btn" id="tab-btn-mod" onclick="switchTab('mod')">
-            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Moderator Portal
         </button>
     </div>
 
@@ -160,30 +190,10 @@
         </div>
     </div>
 
-    <!-- TAB 3: MODERATOR PORTAL -->
+    <!-- TAB 3: MODERATOR PORTAL / TRIAGE WORKSPACE -->
     <div id="tab-mod" class="tab-content">
-        <!-- Login Card -->
-        <div class="card" id="mod-login-card">
-            <h2>Moderator Portal Login</h2>
-            <p style="color: var(--muted-foreground); font-size: 0.9rem; margin-bottom: 16px;">
-                Authorized personnel only. Issues 24-hour HS256 JWT access token.
-            </p>
-            <form id="mod-login-form" onsubmit="modLogin(event)">
-                <div class="form-group">
-                    <label for="mod-user">Username</label>
-                    <input type="text" id="mod-user" required autocomplete="username" value="moderator">
-                </div>
-                <div class="form-group">
-                    <label for="mod-pass">Password</label>
-                    <input type="password" id="mod-pass" required autocomplete="current-password" value="moderator123">
-                </div>
-                <button type="submit" class="btn btn-primary" id="btn-mod-login">Login to Portal</button>
-                <div id="mod-login-error" class="error-message hidden"></div>
-            </form>
-        </div>
-
         <!-- Authenticated Dashboard -->
-        <div id="mod-dashboard" class="hidden">
+        <div id="mod-dashboard">
             <!-- List View -->
             <div class="card" id="mod-list-view">
                 <div class="mod-header">
@@ -325,6 +335,43 @@
         </div>
     </div>
 </div>
+
+    <!-- ACCESSIBLE MODERATOR LOGIN DIALOG MODAL -->
+    <div id="mod-login-modal" class="dialog-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="mod-modal-title" onclick="handleModalOverlayClick(event)">
+        <div class="dialog-content" onclick="event.stopPropagation()">
+            <div class="dialog-header">
+                <h3 id="mod-modal-title" class="dialog-title" style="display: flex; align-items: center; gap: 8px;">
+                    <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Moderator Portal Login
+                </h3>
+                <p class="dialog-description">
+                    Authorized personnel only. Authenticate to obtain a 24-hour access token and access the confidential triage workspace.
+                </p>
+                <button type="button" class="dialog-close" onclick="closeLoginModal()" aria-label="Close dialog">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <form id="mod-login-form" onsubmit="modLogin(event)">
+                <div class="form-group">
+                    <label for="mod-user">Username</label>
+                    <input type="text" id="mod-user" required autocomplete="username" value="moderator">
+                </div>
+                <div class="form-group">
+                    <label for="mod-pass">Password</label>
+                    <input type="password" id="mod-pass" required autocomplete="current-password" value="moderator123">
+                </div>
+                <div id="mod-login-error" class="error-message hidden" style="margin-bottom: 12px;"></div>
+                <div class="dialog-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeLoginModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-mod-login">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
+                        Login to Portal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="/static/js/dashboard.js"></script>
 </body>

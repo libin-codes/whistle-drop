@@ -84,11 +84,116 @@ let modToken = null;
 let currentTrackCode = null;
 let currentModReportId = null;
 let currentModReport = null;
+let currentWorkspace = 'whistleblower'; // 'whistleblower' | 'triage'
+let previouslyFocusedElement = null;
 
-// --- Tab Navigation ---
+// --- Modal Dialog Management ---
+function openLoginModal() {
+    clearError('mod-login-error');
+    previouslyFocusedElement = document.activeElement;
+    const modal = document.getElementById('mod-login-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+            const userInput = document.getElementById('mod-user');
+            if (userInput) {
+                userInput.focus();
+                userInput.select();
+            }
+        }, 50);
+    }
+}
+
+function closeLoginModal() {
+    const modal = document.getElementById('mod-login-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    clearError('mod-login-error');
+    if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === 'function') {
+        previouslyFocusedElement.focus();
+    }
+}
+
+function handleModalOverlayClick(e) {
+    if (e.target && e.target.id === 'mod-login-modal') {
+        closeLoginModal();
+    }
+}
+
+// Global Escape key listener for accessible modal dismissal
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('mod-login-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeLoginModal();
+        }
+    }
+});
+
+// --- Workspace Navigation (Segmented Toggle) ---
+function switchWorkspace(view) {
+    currentWorkspace = view;
+    const btnWhistleblower = document.getElementById('btn-view-whistleblower');
+    const btnTriage = document.getElementById('btn-view-triage');
+    const publicTabs = document.getElementById('public-tabs');
+    const tabMod = document.getElementById('tab-mod');
+    const modDashboard = document.getElementById('mod-dashboard');
+
+    if (view === 'triage') {
+        if (btnWhistleblower) {
+            btnWhistleblower.classList.remove('active');
+            btnWhistleblower.setAttribute('aria-selected', 'false');
+        }
+        if (btnTriage) {
+            btnTriage.classList.add('active');
+            btnTriage.setAttribute('aria-selected', 'true');
+        }
+
+        // Hide public tabs & public views
+        if (publicTabs) publicTabs.style.display = 'none';
+        document.querySelectorAll('.tab-content').forEach(c => {
+            if (c.id !== 'tab-mod') c.classList.remove('active');
+        });
+
+        // Show moderator workspace
+        if (tabMod) tabMod.classList.add('active');
+        if (modDashboard) modDashboard.classList.remove('hidden');
+
+        if (modToken) {
+            fetchModReports();
+        }
+    } else {
+        // Whistleblower view
+        if (btnTriage) {
+            btnTriage.classList.remove('active');
+            btnTriage.setAttribute('aria-selected', 'false');
+        }
+        if (btnWhistleblower) {
+            btnWhistleblower.classList.add('active');
+            btnWhistleblower.setAttribute('aria-selected', 'true');
+        }
+
+        // Hide moderator workspace
+        if (tabMod) tabMod.classList.remove('active');
+
+        // Show public tabs & ensure an active public tab
+        if (publicTabs) publicTabs.style.display = '';
+        const activePublic = document.querySelector('.tab-content.active:not(#tab-mod)');
+        if (!activePublic) {
+            switchTab('submit');
+        }
+    }
+}
+
+// --- Tab Navigation (Public Tabs) ---
 function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => {
+        if (c.id !== 'tab-mod') c.classList.remove('active');
+    });
 
     const targetBtn = document.getElementById('tab-btn-' + tabId);
     if (targetBtn) targetBtn.classList.add('active');
@@ -96,8 +201,12 @@ function switchTab(tabId) {
     const targetTab = document.getElementById('tab-' + tabId);
     if (targetTab) targetTab.classList.add('active');
 
-    if (tabId === 'mod' && modToken) {
-        fetchModReports();
+    if (tabId === 'mod') {
+        if (modToken) {
+            switchWorkspace('triage');
+        } else {
+            openLoginModal();
+        }
     }
 }
 
@@ -366,7 +475,7 @@ async function sendTrackReply(e) {
     }
 }
 
-// --- Tab 3: Moderator Portal Logic ---
+// --- Moderator Authentication & Portal Logic ---
 async function modLogin(e) {
     e.preventDefault();
     const username = document.getElementById('mod-user').value.trim();
@@ -393,11 +502,25 @@ async function modLogin(e) {
         const data = await res.json();
         modToken = data.access_token;
 
-        document.getElementById('mod-current-user').textContent = 'Logged in as: ' + username;
-        document.getElementById('mod-login-card').classList.add('hidden');
-        document.getElementById('mod-dashboard').classList.remove('hidden');
+        // Update badge and username displays
+        const badgeUser = document.getElementById('mod-badge-username');
+        if (badgeUser) badgeUser.textContent = username;
+        const currentUser = document.getElementById('mod-current-user');
+        if (currentUser) currentUser.textContent = 'Logged in as: ' + username;
 
-        fetchModReports();
+        // Close login dialog modal
+        closeLoginModal();
+
+        // Update header state: hide unauth login button, show auth controls
+        const unauthActions = document.getElementById('unauth-header-actions');
+        const authActions = document.getElementById('auth-header-actions');
+        if (unauthActions) unauthActions.classList.add('hidden');
+        if (authActions) authActions.classList.remove('hidden');
+
+        showToast('Authenticated', 'Welcome back, ' + username + '. Accessing Triage Workspace.', 'success');
+
+        // Switch to Triage Workspace
+        switchWorkspace('triage');
 
     } catch (err) {
         showError('mod-login-error', err.message);
@@ -410,11 +533,42 @@ function modLogout() {
     modToken = null;
     currentModReportId = null;
     currentModReport = null;
-    document.getElementById('mod-dashboard').classList.add('hidden');
-    document.getElementById('mod-detail-view').classList.add('hidden');
-    document.getElementById('mod-list-view').classList.remove('hidden');
-    document.getElementById('mod-login-card').classList.remove('hidden');
+
+    // Reset header state: show unauth button, hide auth controls
+    const unauthActions = document.getElementById('unauth-header-actions');
+    const authActions = document.getElementById('auth-header-actions');
+    if (unauthActions) unauthActions.classList.remove('hidden');
+    if (authActions) authActions.classList.add('hidden');
+
+    // Reset workspace toggle buttons
+    const btnWhistleblower = document.getElementById('btn-view-whistleblower');
+    const btnTriage = document.getElementById('btn-view-triage');
+    if (btnWhistleblower) {
+        btnWhistleblower.classList.add('active');
+        btnWhistleblower.setAttribute('aria-selected', 'true');
+    }
+    if (btnTriage) {
+        btnTriage.classList.remove('active');
+        btnTriage.setAttribute('aria-selected', 'false');
+    }
+
+    // Reset moderator views
+    const tabMod = document.getElementById('tab-mod');
+    if (tabMod) tabMod.classList.remove('active');
+    const modDashboard = document.getElementById('mod-dashboard');
+    const modDetail = document.getElementById('mod-detail-view');
+    const modList = document.getElementById('mod-list-view');
+    if (modDashboard) modDashboard.classList.add('hidden');
+    if (modDetail) modDetail.classList.add('hidden');
+    if (modList) modList.classList.remove('hidden');
+
     clearError('mod-login-error');
+
+    // Return to public whistleblower view
+    switchWorkspace('whistleblower');
+    switchTab('submit');
+
+    showToast('Logged Out', 'Moderator session terminated.', 'info');
 }
 
 async function fetchModReports() {
@@ -691,3 +845,12 @@ async function triggerPermanentClosure() {
         setBtnLoading('btn-mod-close', false, 'Irreversibly Close Case');
     }
 }
+
+// --- Window Global Bindings ---
+window.openLoginModal = openLoginModal;
+window.closeLoginModal = closeLoginModal;
+window.handleModalOverlayClick = handleModalOverlayClick;
+window.switchWorkspace = switchWorkspace;
+window.switchTab = switchTab;
+window.modLogin = modLogin;
+window.modLogout = modLogout;
