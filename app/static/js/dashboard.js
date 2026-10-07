@@ -1049,9 +1049,7 @@ async function viewModReport(reportId) {
         // Render Thread
         renderThread('mod-thread', data.messages);
 
-        // Ensure detail view is visible and focus Back button for accessibility
-        const detailView = document.getElementById('mod-detail-view');
-        if (detailView) detailView.classList.remove('hidden');
+        // Focus Back button for accessibility
         const backBtn = document.getElementById('btn-mod-back');
         if (backBtn) backBtn.focus();
 

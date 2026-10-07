@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🛡️ WhistleDrop — Confidential Reporting</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
@@ -212,7 +213,8 @@
                     </div>
 
                     <form id="track-reply-form" class="thread-reply-bar" onsubmit="sendTrackReply(event)">
-                        <input type="text" id="track-reply-text" required placeholder="Type an anonymous confidential reply..." autocomplete="off" class="thread-reply-input">
+                        <label for="track-reply-text" class="sr-only">Type an anonymous confidential reply</label>
+                        <input type="text" id="track-reply-text" required placeholder="Type an anonymous confidential reply..." autocomplete="off" class="thread-reply-input" aria-label="Type an anonymous confidential reply">
                         <button type="submit" class="btn btn-primary btn-icon" id="btn-track-reply" title="Send Reply" aria-label="Send confidential reply">
                             <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                         </button>
@@ -257,11 +259,13 @@
 
                 <div class="triage-filters" id="mod-filters">
                     <div class="triage-search-wrap">
+                        <label for="mod-search-input" class="sr-only">Search reports by ID or description</label>
                         <svg class="icon icon-sm search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         <input type="search" id="mod-search-input" class="triage-search-input" placeholder="Search by ID or description..." oninput="filterModReports()" aria-label="Search reports by ID or description" autocomplete="off">
                     </div>
 
                     <div class="triage-filter-selects">
+                        <label for="mod-filter-status" class="sr-only">Filter by Status</label>
                         <select id="mod-filter-status" onchange="fetchModReports()" aria-label="Filter by Status">
                             <option value="">All Statuses</option>
                             <option value="SUBMITTED">Submitted</option>
@@ -271,6 +275,7 @@
                             <option value="PERMANENTLY_CLOSED">Permanently Closed</option>
                         </select>
 
+                        <label for="mod-filter-category" class="sr-only">Filter by Category</label>
                         <select id="mod-filter-category" onchange="fetchModReports()" aria-label="Filter by Category">
                             <option value="">All Categories</option>
                             <option value="SECURITY">Security</option>
@@ -360,12 +365,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Report Description</label>
+                        <span class="field-label">Report Description</span>
                         <div id="mod-det-desc" class="mod-description-box"></div>
                     </div>
 
                     <div id="mod-det-evidence-container" class="form-group hidden">
-                        <label>Scrubbed Evidence File</label>
+                        <span class="field-label">Scrubbed Evidence File</span>
                         <div>
                             <a id="mod-det-evidence" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-evidence-preview">
                                 <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
@@ -404,7 +409,8 @@
                             </div>
 
                             <form id="mod-reply-form" class="thread-reply-bar" onsubmit="sendModReply(event)">
-                                <input type="text" id="mod-reply-text" required placeholder="Type inquiry or guidance to whistleblower..." autocomplete="off" class="thread-reply-input">
+                                <label for="mod-reply-text" class="sr-only">Type inquiry or guidance to whistleblower</label>
+                                <input type="text" id="mod-reply-text" required placeholder="Type inquiry or guidance to whistleblower..." autocomplete="off" class="thread-reply-input" aria-label="Type inquiry or guidance to whistleblower">
                                 <button type="submit" class="btn btn-primary btn-icon" id="btn-mod-reply" title="Send Message" aria-label="Send dead drop message">
                                     <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                                 </button>

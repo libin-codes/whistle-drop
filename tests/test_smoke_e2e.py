@@ -835,7 +835,7 @@ class TestEndToEndSmoke:
         assert "frozen-thread-notice" in css
         assert "mod-close-section" in css
 
-        # 3. Client JavaScript Delivery: View switching, back navigation, workflow, thread, closure
+        # 3. Client JavaScript Delivery & Syntax Validation
         js_resp = await client.get("/static/js/dashboard.js")
         assert js_resp.status_code == 200
         js = js_resp.text
@@ -846,6 +846,21 @@ class TestEndToEndSmoke:
         assert "executePermanentClosure" in js
         assert "mod-detail-view" in js
         assert "btn-mod-back" in js
+
+        import shutil
+        import subprocess
+
+        if shutil.which("node"):
+            syntax_check = subprocess.run(
+                ["node", "--check", "app/static/js/dashboard.js"],
+                capture_output=True,
+                text=True,
+            )
+            assert syntax_check.returncode == 0, f"JS syntax error: {syntax_check.stderr}"
+
+        # Browser favicon request check (prevents 404 console errors)
+        fav_resp = await client.get("/favicon.ico")
+        assert fav_resp.status_code in (200, 204)
 
         # 4. Full Lifecycle Execution via APIs
         # Step A: Submit report with scrubbed evidence
