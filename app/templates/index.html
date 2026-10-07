@@ -237,12 +237,12 @@
     <div id="tab-mod" class="tab-content">
         <!-- Authenticated Master-Detail Triage Workspace -->
         <div id="mod-dashboard" class="triage-workspace">
-            <!-- Left Pane: Triage Queue List -->
+            <!-- Full-Width Responsive Triage Reports Table View -->
             <div class="card triage-queue-pane" id="mod-list-view">
                 <div class="triage-pane-header">
                     <div>
                         <div class="triage-title-row">
-                            <h2>Triage Queue</h2>
+                            <h2>Triage Reports Queue</h2>
                             <span id="mod-queue-count" class="badge">0</span>
                         </div>
                         <span id="mod-current-user" class="mod-user-indicator"></span>
@@ -256,35 +256,63 @@
                 </div>
 
                 <div class="triage-filters" id="mod-filters">
-                    <select id="mod-filter-status" onchange="fetchModReports()" aria-label="Filter by Status">
-                        <option value="">All Statuses</option>
-                        <option value="SUBMITTED">Submitted</option>
-                        <option value="UNDER_REVIEW">Under Review</option>
-                        <option value="RESOLVED">Resolved</option>
-                        <option value="DISMISSED">Dismissed</option>
-                        <option value="PERMANENTLY_CLOSED">Permanently Closed</option>
-                    </select>
+                    <div class="triage-search-wrap">
+                        <svg class="icon icon-sm search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="search" id="mod-search-input" class="triage-search-input" placeholder="Search by ID or description..." oninput="filterModReports()" aria-label="Search reports by ID or description" autocomplete="off">
+                    </div>
 
-                    <select id="mod-filter-category" onchange="fetchModReports()" aria-label="Filter by Category">
-                        <option value="">All Categories</option>
-                        <option value="SECURITY">Security</option>
-                        <option value="HARASSMENT">Harassment</option>
-                        <option value="CORRUPTION">Corruption</option>
-                        <option value="TECHNICAL">Technical</option>
-                        <option value="OTHER">Other</option>
-                    </select>
+                    <div class="triage-filter-selects">
+                        <select id="mod-filter-status" onchange="fetchModReports()" aria-label="Filter by Status">
+                            <option value="">All Statuses</option>
+                            <option value="SUBMITTED">Submitted</option>
+                            <option value="UNDER_REVIEW">Under Review</option>
+                            <option value="RESOLVED">Resolved</option>
+                            <option value="DISMISSED">Dismissed</option>
+                            <option value="PERMANENTLY_CLOSED">Permanently Closed</option>
+                        </select>
+
+                        <select id="mod-filter-category" onchange="fetchModReports()" aria-label="Filter by Category">
+                            <option value="">All Categories</option>
+                            <option value="SECURITY">Security</option>
+                            <option value="HARASSMENT">Harassment</option>
+                            <option value="CORRUPTION">Corruption</option>
+                            <option value="TECHNICAL">Technical</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="triage-queue-scroll">
-                    <ul class="report-list" id="mod-report-list" role="listbox" aria-label="Reports Queue">
-                        <!-- Populated dynamically -->
-                    </ul>
+                <div class="triage-table-wrap">
+                    <table class="reports-table" id="mod-report-table" aria-label="Triage Reports Queue">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="th-id">Report ID (#)</th>
+                                <th scope="col" class="th-category">Category</th>
+                                <th scope="col" class="th-desc">Description Preview</th>
+                                <th scope="col" class="th-evidence">Evidence Indicator</th>
+                                <th scope="col" class="th-status">Status</th>
+                                <th scope="col" class="th-time">Submitted Timestamp</th>
+                                <th scope="col" class="th-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mod-report-list">
+                            <tr class="triage-table-empty-row" id="mod-table-empty-row">
+                                <td colspan="7" class="triage-table-empty">
+                                    <div class="empty-state-container">
+                                        <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                        <p class="empty-state-title">No reports found matching criteria.</p>
+                                        <p class="empty-state-subtitle">Use search input or filters above to find reports.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
                 <div id="mod-list-error" class="error-message hidden"></div>
             </div>
 
-            <!-- Right Pane: Detail Inspector -->
-            <div class="card triage-detail-pane" id="mod-detail-view">
+            <!-- Detail Inspector View -->
+            <div class="card triage-detail-pane hidden" id="mod-detail-view">
                 <!-- Empty State (No Report Selected) -->
                 <div id="mod-detail-empty" class="triage-empty-detail">
                     <div class="empty-icon-wrap">
@@ -305,6 +333,10 @@
                             </div>
                         </div>
                         <div class="mod-detail-header-actions">
+                            <button type="button" class="btn btn-outline btn-sm" id="btn-mod-back" onclick="closeModDetail()" title="Back to Reports Queue">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                                ← Back to Reports
+                            </button>
                             <button type="button" class="btn btn-outline btn-sm" id="btn-mod-close-detail" onclick="closeModDetail()" title="Clear Selection">
                                 <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                 Close Inspector

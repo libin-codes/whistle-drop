@@ -676,6 +676,94 @@ class TestEndToEndSmoke:
         assert track_resp.json()["status"] == "UNDER_REVIEW"
         assert track_resp.json()["status_update"] == "Reviewing security issue"
 
+    async def test_full_width_triage_reports_table_and_search(self, client, auth_headers):
+        """Issue #21 acceptance criteria:
+        - The narrow side-panel queue list is replaced by a full-width responsive table of reports.
+        - Table columns display Report ID, Category, Description Preview, Evidence indicator, Status, Submitted Timestamp, and Actions.
+        - A real-time client-side search input field allows instant filtering of reports by ID or description keywords.
+        - Existing Status and Category filter dropdowns and the manual Refresh button continue to filter the table data seamlessly.
+        - The queue count badge updates dynamically to reflect the number of reports matching active filters.
+        - A clean empty state row appears when no reports match the active filters or search criteria.
+        - Automated end-to-end tests verify the table markup, column structure, search input element, and filtering functionality.
+        """
+        resp = await client.get("/")
+        assert resp.status_code == 200
+        html = resp.text
+
+        # 1. Full-width responsive table markup and column headers
+        assert 'id="mod-report-table"' in html
+        assert 'reports-table' in html
+        assert 'triage-table-wrap' in html
+        assert '<th scope="col" class="th-id">Report ID (#)</th>' in html
+        assert '<th scope="col" class="th-category">Category</th>' in html
+        assert '<th scope="col" class="th-desc">Description Preview</th>' in html
+        assert '<th scope="col" class="th-evidence">Evidence Indicator</th>' in html
+        assert '<th scope="col" class="th-status">Status</th>' in html
+        assert '<th scope="col" class="th-time">Submitted Timestamp</th>' in html
+        assert '<th scope="col" class="th-actions">Actions</th>' in html
+        assert 'id="mod-report-list"' in html
+
+        # 2. Real-time client-side search input field and toolbar
+        assert 'id="mod-search-input"' in html
+        assert 'triage-search-input' in html
+        assert 'oninput="filterModReports()"' in html
+        assert 'Search by ID or description...' in html
+
+        # 3. Existing status & category dropdown filters and manual refresh button
+        assert 'id="mod-filter-status"' in html
+        assert 'id="mod-filter-category"' in html
+        assert 'id="btn-mod-refresh"' in html
+        assert 'id="mod-queue-count"' in html
+
+        # 4. CSS delivery: table styling, clean description preview truncation, empty state, and responsive wrap
+        css_resp = await client.get("/static/css/styles.css")
+        assert css_resp.status_code == 200
+        css = css_resp.text
+        assert "reports-table" in css
+        assert "triage-table-wrap" in css
+        assert "report-desc-preview" in css
+        assert "btn-view-report" in css
+        assert "triage-table-empty" in css
+        assert "triage-search-input" in css
+
+        # 5. Client JavaScript delivery: table rendering, real-time client search, and dynamic counter
+        js_resp = await client.get("/static/js/dashboard.js")
+        assert js_resp.status_code == 200
+        js = js_resp.text
+        assert "filterModReports" in js
+        assert "renderModReportsTable" in js
+        assert "fetchModReports" in js
+        assert "viewModReport" in js
+        assert "mod-search-input" in js
+        assert "btn-view-report" in js
+        assert "triage-table-empty" in js
+
+        # 6. Verify backend API integration with query filters for moderator reports
+        # Create reports across multiple categories
+        r1 = await client.post("/api/v1/reports", json={
+            "category": "SECURITY",
+            "description": "Vulnerability in auth token validator"
+        })
+        assert r1.status_code == 201
+        r2 = await client.post("/api/v1/reports", json={
+            "category": "CORRUPTION",
+            "description": "Kickbacks discovered in procurement department"
+        })
+        assert r2.status_code == 201
+
+        # Query all reports
+        list_resp = await client.get("/api/v1/moderator/reports", headers=auth_headers)
+        assert list_resp.status_code == 200
+        reports = list_resp.json()
+        assert len(reports) >= 2
+
+        # Query by category
+        sec_resp = await client.get("/api/v1/moderator/reports?category=SECURITY", headers=auth_headers)
+        assert sec_resp.status_code == 200
+        sec_reports = sec_resp.json()
+        assert all(r["category"] == "SECURITY" for r in sec_reports)
+
+
 
 
 

@@ -1529,44 +1529,44 @@ textarea {
     line-height: 1.5;
 }
 
-/* Moderator Portal & Master-Detail Triage Workspace */
+/* Moderator Portal & Full-Width Triage Workspace */
 .triage-workspace {
-    display: grid;
-    grid-template-columns: 380px 1fr;
+    display: flex;
+    flex-direction: column;
     gap: var(--spacing-md);
-    align-items: start;
+    width: 100%;
     min-height: 620px;
 }
 
-/* Left Pane: Triage Queue */
+/* Full-Width Triage Queue Pane */
 .triage-queue-pane {
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 150px);
-    min-height: 600px;
-    overflow: hidden;
+    width: 100%;
+    min-height: 500px;
     padding: var(--spacing-md);
 }
 
 .triage-pane-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
 .triage-title-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .triage-title-row h2 {
-    font-size: 1.25rem;
+    font-size: 1.35rem;
     font-weight: 700;
     margin-bottom: 0;
+    color: var(--foreground);
 }
 
 .mod-user-indicator {
@@ -1579,27 +1579,241 @@ textarea {
 .triage-pane-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
+/* Triage Filters Toolbar with Search */
 .triage-filters,
 .filters {
     display: flex;
-    gap: var(--spacing-sm);
-    margin-bottom: 12px;
+    gap: 12px;
+    margin-bottom: 16px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
-.triage-filters select,
-.filters select {
-    flex: 1 1 140px;
-    min-width: 130px;
-    padding: 6px 10px;
-    font-size: 0.8125rem;
+.triage-search-wrap {
+    position: relative;
+    flex: 1 1 260px;
+    min-width: 220px;
+    display: flex;
+    align-items: center;
+}
+
+.triage-search-wrap .search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--muted-foreground);
+    pointer-events: none;
+    width: 16px;
+    height: 16px;
+}
+
+.triage-search-input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    font-size: 0.875rem;
     background-color: var(--background);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--foreground);
+    transition: all 0.15s ease;
+}
+
+.triage-search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.triage-search-input::placeholder {
+    color: var(--muted-foreground);
+    opacity: 0.8;
+}
+
+.triage-filter-selects {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.triage-filter-selects select,
+.triage-filters select,
+.filters select {
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--foreground);
+    min-width: 140px;
+    cursor: pointer;
+}
+
+/* Full-Width Triage Reports Table */
+.triage-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background-color: var(--card-bg, #09090b);
+}
+
+.reports-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+.reports-table thead {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border);
+}
+
+.reports-table th {
+    padding: 12px 14px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+}
+
+.reports-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+}
+
+.reports-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.reports-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.reports-table tbody tr.active {
+    background-color: rgba(59, 130, 246, 0.08);
+}
+
+.reports-table td {
+    padding: 12px 14px;
+    vertical-align: middle;
+}
+
+/* Table Column Details */
+.reports-table .col-id {
+    font-family: monospace;
+    font-weight: 700;
+    color: var(--foreground);
+    white-space: nowrap;
+    width: 90px;
+}
+
+.reports-table .col-category {
+    white-space: nowrap;
+    width: 120px;
+}
+
+.reports-table .col-desc {
+    min-width: 220px;
+    max-width: 380px;
+}
+
+.report-desc-preview,
+.desc-preview {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--muted-foreground);
+    line-height: 1.4;
+    max-width: 380px;
+}
+
+.reports-table .col-evidence {
+    white-space: nowrap;
+    width: 120px;
+}
+
+.report-has-evidence {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #60a5fa;
+    background: rgba(59, 130, 246, 0.1);
+    padding: 2px 8px;
+    border-radius: 9999px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.report-no-evidence {
+    color: var(--muted-foreground);
+    opacity: 0.5;
+    padding-left: 6px;
+}
+
+.reports-table .col-status {
+    white-space: nowrap;
+    width: 140px;
+}
+
+.reports-table .col-time {
+    white-space: nowrap;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    width: 130px;
+}
+
+.reports-table .col-actions {
+    text-align: right;
+    white-space: nowrap;
+    width: 90px;
+}
+
+.btn-view-report {
+    padding: 4px 12px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+/* Empty State in Table */
+.triage-table-empty-row td.triage-table-empty {
+    padding: 56px 20px;
+    text-align: center;
+    color: var(--muted-foreground);
+}
+
+.empty-state-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.empty-state-container .icon {
+    opacity: 0.4;
+    color: var(--muted-foreground);
+}
+
+.empty-state-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--foreground);
+    margin: 0;
+}
+
+.empty-state-subtitle {
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+    margin: 0;
 }
 
 .triage-queue-scroll {
@@ -1620,15 +1834,6 @@ textarea {
     gap: 8px;
 }
 
-.triage-queue-empty .icon {
-    opacity: 0.5;
-}
-
-.triage-queue-empty p {
-    font-size: 0.875rem;
-    color: var(--muted-foreground);
-}
-
 .report-list {
     list-style: none;
     display: flex;
@@ -1637,27 +1842,17 @@ textarea {
 }
 
 .report-item {
-    padding: 12px 14px;
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
     transition: all 0.15s ease;
     user-select: none;
 }
 
 .report-item:hover {
     border-color: #52525b;
-    background-color: #18181b;
 }
 
 .report-item.active {
     border-color: #3b82f6;
     background-color: rgba(59, 130, 246, 0.08);
-    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
 }
 
 .report-item-header {

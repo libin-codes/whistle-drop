@@ -236,12 +236,19 @@ function switchWorkspace(view) {
         if (tabMod) tabMod.classList.add('active');
         if (modDashboard) modDashboard.classList.remove('hidden');
 
-        // Ensure detail inspector displays empty state if no report is selected
+        // Ensure full-width table view is active if no report selected
+        const listView = document.getElementById('mod-list-view');
+        const detailView = document.getElementById('mod-detail-view');
         if (!currentModReportId) {
+            if (listView) listView.classList.remove('hidden');
+            if (detailView) detailView.classList.add('hidden');
             const emptyEl = document.getElementById('mod-detail-empty');
             const contentEl = document.getElementById('mod-detail-content');
             if (emptyEl) emptyEl.classList.remove('hidden');
             if (contentEl) contentEl.classList.add('hidden');
+        } else {
+            if (listView) listView.classList.add('hidden');
+            if (detailView) detailView.classList.remove('hidden');
         }
 
         if (modToken) {
@@ -807,6 +814,8 @@ function modLogout() {
     switchTab('submit');
 }
 
+let modReportsList = [];
+
 async function fetchModReports() {
     if (!modToken) return;
     clearError('mod-list-error');
@@ -831,59 +840,95 @@ async function fetchModReports() {
             throw new Error(errData.detail || 'Failed to fetch reports.');
         }
 
-        const reports = await res.json();
-        const list = document.getElementById('mod-report-list');
-        const countBadge = document.getElementById('mod-queue-count');
-        if (countBadge) countBadge.textContent = String(reports.length);
-
-        if (!list) return;
-        list.innerHTML = '';
-
-        if (reports.length === 0) {
-            list.innerHTML = `
-                <li class="triage-queue-empty">
-                    ${getIcon('search', 'icon icon-lg')}
-                    <p>No reports found matching criteria.</p>
-                </li>
-            `;
-            if (currentModReportId) {
-                closeModDetail();
-            }
-            return;
-        }
-
-        reports.forEach(r => {
-            const li = document.createElement('li');
-            const isActive = currentModReportId === r.id;
-            li.className = 'report-item' + (isActive ? ' active' : '');
-            li.dataset.id = String(r.id);
-            li.setAttribute('role', 'option');
-            li.setAttribute('aria-selected', isActive ? 'true' : 'false');
-            li.onclick = () => viewModReport(r.id);
-
-            const relTime = r.created_at ? formatRelativeTime(r.created_at) : '';
-            const fullDate = r.created_at ? new Date(r.created_at).toLocaleString() : '';
-
-            li.innerHTML = `
-                <div class="report-item-header">
-                    <div class="report-item-title-row">
-                        <span class="report-item-id">Report #${r.id}</span>
-                        <span class="cat-badge">${r.category}</span>
-                    </div>
-                    <span class="report-item-time" title="${fullDate}">${relTime}</span>
-                </div>
-                <div class="report-item-desc">${escapeHtml(r.description)}</div>
-                <div class="report-item-footer">
-                    <span class="badge ${r.status}">${r.status.replace(/_/g, ' ')}</span>
-                    ${r.evidence_url ? `<span class="report-has-evidence" title="Has scrubbed evidence">${getIcon('fileText', 'icon icon-xs')} Evidence</span>` : ''}
-                </div>
-            `;
-            list.appendChild(li);
-        });
+        modReportsList = await res.json();
+        filterModReports();
 
     } catch (err) {
         showError('mod-list-error', err.message);
     }
+}
+
+function filterModReports() {
+    const searchInput = document.getElementById('mod-search-input');
+    const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+
+    let filtered = modReportsList;
+    if (query) {
+        const cleanQuery = query.replace(/^#/, '');
+        filtered = modReportsList.filter(r => {
+            const idMatch = cleanQuery.length > 0 && String(r.id).toLowerCase().includes(cleanQuery);
+            const descMatch = r.description ? r.description.toLowerCase().includes(query) : false;
+            return idMatch || descMatch;
+        });
+    }
+
+    renderModReportsTable(filtered);
+}
+
+function renderModReportsTable(reports) {
+    const list = document.getElementById('mod-report-list');
+    const countBadge = document.getElementById('mod-queue-count');
+    if (countBadge) countBadge.textContent = String(reports.length);
+
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (reports.length === 0) {
+        list.innerHTML = `
+            <tr class="triage-table-empty-row" id="mod-table-empty-row">
+                <td colspan="7" class="triage-table-empty">
+                    <div class="empty-state-container">
+                        ${getIcon('search', 'icon icon-lg')}
+                        <p class="empty-state-title">No reports match your active filters or search criteria.</p>
+                        <p class="empty-state-subtitle">Try adjusting your search query, status, or category filter.</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    reports.forEach(r => {
+        const tr = document.createElement('tr');
+        const isActive = currentModReportId === r.id;
+        tr.className = 'report-row report-item' + (isActive ? ' active' : '');
+        tr.dataset.id = String(r.id);
+        tr.setAttribute('role', 'row');
+        tr.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        tr.tabIndex = 0;
+        tr.onclick = () => viewModReport(r.id);
+        tr.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                viewModReport(r.id);
+            }
+        };
+
+        const relTime = r.created_at ? formatRelativeTime(r.created_at) : '';
+        const fullDate = r.created_at ? new Date(r.created_at).toLocaleString() : '';
+        const desc = r.description || '';
+
+        tr.innerHTML = `
+            <td class="col-id"><span class="report-id-text">#${r.id}</span></td>
+            <td class="col-category"><span class="cat-badge">${r.category}</span></td>
+            <td class="col-desc" title="${escapeHtml(desc)}">
+                <div class="report-desc-preview">${escapeHtml(desc)}</div>
+            </td>
+            <td class="col-evidence">
+                ${r.evidence_url 
+                    ? `<span class="report-has-evidence" title="Has scrubbed evidence">${getIcon('fileText', 'icon icon-xs')} Evidence</span>` 
+                    : `<span class="report-no-evidence" title="No evidence attached">—</span>`}
+            </td>
+            <td class="col-status"><span class="badge ${r.status}">${r.status.replace(/_/g, ' ')}</span></td>
+            <td class="col-time"><span class="report-timestamp" title="${fullDate}">${relTime}</span></td>
+            <td class="col-actions">
+                <button type="button" class="btn btn-outline btn-sm btn-view-report" onclick="event.stopPropagation(); viewModReport(${r.id});" aria-label="View Report #${r.id}">
+                    View
+                </button>
+            </td>
+        `;
+        list.appendChild(tr);
+    });
 }
 
 async function viewModReport(reportId) {
@@ -918,11 +963,11 @@ async function viewModReport(reportId) {
             }
         });
 
-        // Hide empty state, show detail content
-        const emptyEl = document.getElementById('mod-detail-empty');
-        const contentEl = document.getElementById('mod-detail-content');
-        if (emptyEl) emptyEl.classList.add('hidden');
-        if (contentEl) contentEl.classList.remove('hidden');
+        // Transition from table to detail view
+        const listView = document.getElementById('mod-list-view');
+        const detailView = document.getElementById('mod-detail-view');
+        if (listView) listView.classList.add('hidden');
+        if (detailView) detailView.classList.remove('hidden');
 
         // Populate Details
         document.getElementById('mod-detail-heading').textContent = 'Report #' + data.id;
@@ -1014,6 +1059,11 @@ function closeModDetail() {
         item.classList.remove('active');
         item.setAttribute('aria-selected', 'false');
     });
+
+    const listView = document.getElementById('mod-list-view');
+    const detailView = document.getElementById('mod-detail-view');
+    if (listView) listView.classList.remove('hidden');
+    if (detailView) detailView.classList.add('hidden');
 
     const emptyEl = document.getElementById('mod-detail-empty');
     const contentEl = document.getElementById('mod-detail-content');
@@ -1157,6 +1207,8 @@ window.switchTab = switchTab;
 window.modLogin = modLogin;
 window.modLogout = modLogout;
 window.fetchModReports = fetchModReports;
+window.filterModReports = filterModReports;
+window.renderModReportsTable = renderModReportsTable;
 window.viewModReport = viewModReport;
 window.closeModDetail = closeModDetail;
 window.advanceStatus = advanceStatus;
