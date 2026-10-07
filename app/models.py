@@ -4,8 +4,8 @@ import enum
 
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Enum, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, Enum, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -24,6 +24,11 @@ class StatusEnum(enum.Enum):
     RESOLVED = "RESOLVED"
     DISMISSED = "DISMISSED"
     PERMANENTLY_CLOSED = "PERMANENTLY_CLOSED"
+
+
+class SenderRoleEnum(enum.Enum):
+    MODERATOR = "MODERATOR"
+    REPORTER = "REPORTER"
 
 
 def _utcnow() -> datetime:
@@ -54,6 +59,33 @@ class Report(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
     )
+
+    messages: Mapped[list["ReportMessage"]] = relationship(
+        "ReportMessage",
+        back_populates="report",
+        order_by="ReportMessage.created_at.asc()",
+        cascade="all, delete-orphan",
+    )
+
+
+class ReportMessage(Base):
+    """A message in the report's Dead Drop thread."""
+
+    __tablename__ = "report_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    report_id: Mapped[int] = mapped_column(
+        ForeignKey("reports.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    sender_role: Mapped[SenderRoleEnum] = mapped_column(
+        Enum(SenderRoleEnum), nullable=False
+    )
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+
+    report: Mapped["Report"] = relationship("Report", back_populates="messages")
 
 
 class Moderator(Base):

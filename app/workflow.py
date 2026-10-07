@@ -11,6 +11,9 @@ ALLOWED_STATUS_TRANSITIONS: dict[StatusEnum, set[StatusEnum]] = {
 }
 
 
+REDACTION_MARKER = "[REDACTED - CASE PERMANENTLY CLOSED]"
+
+
 def can_transition(current_status: StatusEnum, target_status: StatusEnum) -> bool:
     """Check whether a transition between two statuses is permitted in the workflow."""
     return target_status in ALLOWED_STATUS_TRANSITIONS.get(current_status, set())

@@ -185,6 +185,44 @@ All primary endpoints are prefixed with `/api/v1`.
   Illegal transitions return `HTTP 400 Bad Request`.
 - **Response** (`200 OK`): Updated report object.
 
+### 8. Dead Drop Moderator Inquiry (Moderator)
+- **`POST /api/v1/moderator/reports/{report_id}/messages`**
+- **Headers**: `Authorization: Bearer <access_token>`
+- **Request Body**:
+  ```json
+  {
+    "content": "Can you specify the server IP address observed?"
+  }
+  ```
+- **Response** (`201 Created`): Created message with `sender_role: "MODERATOR"`.
+
+### 9. Dead Drop Whistleblower Reply (Reporter)
+- **`POST /api/v1/reports/track/{case_code}/messages`**
+- **Request Body**:
+  ```json
+  {
+    "content": "The backend payment gateway auth cluster."
+  }
+  ```
+- **Response** (`201 Created`): Created message with `sender_role: "REPORTER"`.
+
+### 10. Permanent Case Closure (Moderator)
+- **`POST /api/v1/moderator/reports/{report_id}/close`**
+- **Headers**: `Authorization: Bearer <access_token>`
+- **Request Body** (optional):
+  ```json
+  {
+    "status_note": "Case permanently archived after forensic review."
+  }
+  ```
+- **Behavior (ADR-0002)**:
+  - Irreversibly sets status to `PERMANENTLY_CLOSED`.
+  - Overwrites description with standardized Redaction Marker (`[REDACTED - CASE PERMANENTLY CLOSED]`).
+  - Shreds and unlinks any attached evidence file from local storage.
+  - Freezes the Dead Drop message thread against subsequent writes.
+  - Rejects further status updates, closures, or messages with `HTTP 400 Bad Request`.
+- **Response** (`200 OK`): Redacted report object.
+
 ---
 
 ## Running Tests
@@ -203,6 +241,8 @@ The test suite covers:
 - Moderator auto-seeding, JWT authentication, and Bearer token enforcement
 - Filtered report review with category/status filters and pagination
 - Forward-only Status Workflow transitions and illegal jump rejection
+- Two-way confidential Dead Drop messaging between moderators and whistleblowers
+- Permanent case closure data minimization, description redaction, file shredding, and closure immutability
 
 ---
 

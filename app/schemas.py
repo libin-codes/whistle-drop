@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class CategoryIn(str, Enum):
@@ -42,6 +42,50 @@ class ReportCreated(BaseModel):
     message: str = "Report submitted successfully."
 
 
+class MessageCreate(BaseModel):
+    content: str = Field(min_length=1)
+
+    @model_validator(mode="before")
+    @classmethod
+    def allow_message_field(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "content" not in data and "message" in data:
+                return {**data, "content": data["message"]}
+        return data
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Message content cannot be blank.")
+        return v
+
+
+class MessageResponse(BaseModel):
+    id: int
+    sender_role: str
+    content: str
+    message: str | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def from_message(cls, msg: Any) -> "MessageResponse":
+        role_val = (
+            msg.sender_role.value
+            if hasattr(msg.sender_role, "value")
+            else str(msg.sender_role)
+        )
+        return cls(
+            id=msg.id,
+            sender_role=role_val,
+            content=msg.content,
+            message=msg.content,
+            created_at=msg.created_at,
+        )
+
+
 class ReportStatus(BaseModel):
     """Public tracking response — no internal IDs exposed."""
 
@@ -49,6 +93,7 @@ class ReportStatus(BaseModel):
     status: str
     status_note: str | None = None
     status_update: str | None = None
+    messages: list[MessageResponse] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 
@@ -66,11 +111,17 @@ class ReportStatus(BaseModel):
             if hasattr(report.status, "value")
             else str(report.status)
         )
+        messages_list = [
+            MessageResponse.from_message(m)
+            for m in (getattr(report, "messages", []) or [])
+        ]
+        messages_list.sort(key=lambda m: m.created_at)
         return cls(
             category=category_val,
             status=status_val,
             status_note=report.status_note,
             status_update=report.status_note,
+            messages=messages_list,
             created_at=report.created_at,
             updated_at=report.updated_at,
         )
@@ -106,6 +157,7 @@ class ModeratorReportResponse(BaseModel):
     status: str
     status_note: str | None = None
     status_update: str | None = None
+    messages: list[MessageResponse] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 
@@ -123,6 +175,11 @@ class ModeratorReportResponse(BaseModel):
             if hasattr(report.status, "value")
             else str(report.status)
         )
+        messages_list = [
+            MessageResponse.from_message(m)
+            for m in (getattr(report, "messages", []) or [])
+        ]
+        messages_list.sort(key=lambda m: m.created_at)
         return cls(
             id=report.id,
             category=category_val,
@@ -131,6 +188,7 @@ class ModeratorReportResponse(BaseModel):
             status=status_val,
             status_note=report.status_note,
             status_update=report.status_note,
+            messages=messages_list,
             created_at=report.created_at,
             updated_at=report.updated_at,
         )
@@ -140,3 +198,10 @@ class ReportStatusUpdate(BaseModel):
     status: str
     status_update: str | None = None
     status_note: str | None = None
+
+
+class CaseCloseRequest(BaseModel):
+    status_note: str | None = None
+    status_update: str | None = None
+    reason: str | None = None
+

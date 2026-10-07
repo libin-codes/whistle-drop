@@ -1,13 +1,25 @@
-"""Moderator portal routes for listing, inspecting, and updating reports."""
-
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_moderator
 from app.database import get_db
-from app.models import CategoryEnum, Moderator, Report, StatusEnum
-from app.schemas import ModeratorReportResponse, ReportStatusUpdate
-from app.workflow import can_transition
+from app.evidence import delete_evidence
+from app.models import (
+    CategoryEnum,
+    Moderator,
+    Report,
+    ReportMessage,
+    SenderRoleEnum,
+    StatusEnum,
+)
+from app.schemas import (
+    CaseCloseRequest,
+    MessageCreate,
+    MessageResponse,
+    ModeratorReportResponse,
+    ReportStatusUpdate,
+)
+from app.workflow import REDACTION_MARKER, can_transition
 
 router = APIRouter(prefix="/moderator/reports", tags=["moderator"])
 
@@ -82,6 +94,12 @@ def update_report_status(
     if not report:
         raise HTTPException(status_code=404, detail="Report not found.")
 
+    if report.status == StatusEnum.PERMANENTLY_CLOSED:
+        raise HTTPException(
+            status_code=400,
+            detail="Permanently closed reports cannot be modified.",
+        )
+
     target_status_name = payload.status.strip().upper()
     if target_status_name not in StatusEnum.__members__:
         raise HTTPException(
@@ -106,3 +124,98 @@ def update_report_status(
     db.refresh(report)
 
     return ModeratorReportResponse.from_report(report)
+
+
+@router.post("/{report_id}/messages", response_model=MessageResponse, status_code=201)
+@router.post("/{report_id}/messages/", response_model=MessageResponse, status_code=201, include_in_schema=False)
+def post_moderator_message(
+    report_id: int,
+    payload: MessageCreate,
+    current_moderator: Moderator = Depends(get_current_moderator),
+    db: Session = Depends(get_db),
+):
+    """Post an authenticated moderator inquiry or note to the report's Dead Drop thread."""
+    report = db.query(Report).filter(Report.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found.")
+
+    if report.status == StatusEnum.PERMANENTLY_CLOSED:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot send messages on a permanently closed report.",
+        )
+
+    msg = ReportMessage(
+        report_id=report.id,
+        sender_role=SenderRoleEnum.MODERATOR,
+        content=payload.content,
+    )
+    db.add(msg)
+    db.commit()
+    db.refresh(msg)
+
+    return MessageResponse.from_message(msg)
+
+
+@router.get("/{report_id}/messages", response_model=list[MessageResponse])
+@router.get("/{report_id}/messages/", response_model=list[MessageResponse], include_in_schema=False)
+def get_moderator_messages(
+    report_id: int,
+    current_moderator: Moderator = Depends(get_current_moderator),
+    db: Session = Depends(get_db),
+):
+    """Get the Dead Drop message thread for a report."""
+    report = db.query(Report).filter(Report.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found.")
+
+    return [MessageResponse.from_message(m) for m in (report.messages or [])]
+
+
+@router.post("/{report_id}/close", response_model=ModeratorReportResponse)
+@router.post("/{report_id}/close/", response_model=ModeratorReportResponse, include_in_schema=False)
+def close_report(
+    report_id: int,
+    payload: CaseCloseRequest | None = Body(default=None),
+    current_moderator: Moderator = Depends(get_current_moderator),
+    db: Session = Depends(get_db),
+):
+    """Irreversibly close a report and trigger permanent case closure data minimization (ADR-0002).
+
+    - Transitions status to PERMANENTLY_CLOSED
+    - Overwrites description with standardized Redaction Marker
+    - Unlinks and shreds attached local evidence files from disk
+    - Freezes the Dead Drop message thread against subsequent writes
+    """
+    report = db.query(Report).filter(Report.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found.")
+
+    if report.status == StatusEnum.PERMANENTLY_CLOSED:
+        raise HTTPException(
+            status_code=400,
+            detail="Report is already permanently closed.",
+        )
+
+    # Transition status
+    report.status = StatusEnum.PERMANENTLY_CLOSED
+
+    # Overwrite description with standardized Redaction Marker
+    report.description = REDACTION_MARKER
+
+    # Shred local evidence file from disk storage
+    if report.evidence_url:
+        delete_evidence(report.evidence_url)
+        report.evidence_url = None
+
+    # Apply optional status note / update if provided
+    if payload:
+        note = payload.status_update or payload.status_note or payload.reason
+        if note:
+            report.status_note = note
+
+    db.commit()
+    db.refresh(report)
+
+    return ModeratorReportResponse.from_report(report)
+
