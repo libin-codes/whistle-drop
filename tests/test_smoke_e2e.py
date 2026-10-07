@@ -297,3 +297,69 @@ class TestEndToEndSmoke:
         for icon_name in ["shield", "lock", "search", "copy", "fileText", "alertTriangle"]:
             assert icon_name in js, f"Missing icon {icon_name} in dashboard.js"
 
+    async def test_moderator_auth_header_navigation_and_modal(self, client):
+        """Ticket 2 acceptance criteria:
+        - Moderator Portal removed from public tab bar; outline 'Moderator Login' button in header top-right
+        - Accessible login dialog modal with backdrop blur, keyboard support (Escape to dismiss), and error feedback
+        - Successful login persists JWT in state, closes modal, renders moderator badge & Logout button
+        - Authenticated header provides segmented toggle to switch between Triage Workspace and Whistleblower View
+        - Clicking Logout clears session, resets header to 'Moderator Login', and returns to public view
+        - Zero external scripts or styles
+        """
+        resp = await client.get("/")
+        assert resp.status_code == 200
+        html = resp.text
+
+        # 1. Zero external scripts or styles
+        assert "<script src=\"http" not in html
+        assert "<link rel=\"stylesheet\" href=\"http" not in html
+
+        # 2. Moderator Login outline button in header
+        assert "btn-open-mod-login" in html
+        assert "Moderator Login" in html
+        assert "openLoginModal" in html
+
+        # 3. Public tab bar has Submit and Track, but NOT Moderator Portal in tabs
+        tabs_start = html.find('class="tabs"')
+        tabs_end = html.find('</div>', tabs_start)
+        tabs_html = html[tabs_start:tabs_end]
+        assert "Submit Report" in tabs_html
+        assert "Track Report" in tabs_html
+        assert "Moderator Portal" not in tabs_html
+
+        # 4. Accessible dialog modal for moderator login
+        assert 'id="mod-login-modal"' in html
+        assert 'role="dialog"' in html
+        assert 'aria-modal="true"' in html
+        assert "mod-login-form" in html
+        assert "mod-user" in html
+        assert "mod-pass" in html
+        assert "mod-login-error" in html
+        assert "closeLoginModal" in html
+
+        # 5. Authenticated header navigation elements
+        assert "workspace-toggle" in html
+        assert "Triage Workspace" in html
+        assert "Whistleblower View" in html
+        assert "mod-badge" in html
+        assert "btn-mod-logout" in html
+
+        # 6. CSS styles verification
+        css_resp = await client.get("/static/css/styles.css")
+        assert css_resp.status_code == 200
+        css = css_resp.text
+        assert "segmented-control" in css
+        assert "segmented-btn" in css
+        assert "backdrop-filter" in css
+
+        # 7. JS functions verification
+        js_resp = await client.get("/static/js/dashboard.js")
+        assert js_resp.status_code == 200
+        js = js_resp.text
+        assert "openLoginModal" in js
+        assert "closeLoginModal" in js
+        assert "switchWorkspace" in js
+        assert "modLogin" in js
+        assert "modLogout" in js
+        assert "Escape" in js
+

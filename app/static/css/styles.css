@@ -71,27 +71,117 @@ body {
     padding: var(--spacing-lg) var(--spacing-md);
 }
 
-/* Header & Typography */
+/* Header & Navigation Layout */
 .header {
-    text-align: center;
     margin-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--spacing-md);
 }
 
-.header h1 {
-    font-size: 2.2rem;
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.header .brand {
+    text-align: left;
+}
+
+.header h1,
+.header .brand h1 {
+    font-size: 2rem;
     font-weight: 700;
     letter-spacing: -0.025em;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: 4px;
     color: var(--foreground);
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 10px;
 }
 
-.header p {
+.header p,
+.header .brand p {
     color: var(--muted-foreground);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.header-auth-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+/* Segmented Control / Navigation Toggle */
+.segmented-control {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 3px;
+    gap: 2px;
+}
+
+.segmented-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    border-radius: calc(var(--radius) - 2px);
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.segmented-btn:hover {
+    color: var(--foreground);
+}
+
+.segmented-btn.active {
+    background-color: var(--card);
+    color: var(--foreground);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.mod-identity-badge {
+    display: inline-flex;
+    align-items: center;
+}
+
+.badge-moderator {
+    background-color: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    font-weight: 500;
+    font-size: 0.8125rem;
+    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 9999px;
+}
+
+.btn-sm {
+    padding: 4px 10px;
+    font-size: 0.8125rem;
 }
 
 /* Monochromatic Lucide SVG Icon Utilities */
@@ -847,6 +937,9 @@ textarea {
 }
 
 @media (max-width: 600px) {
+    .header-top { flex-direction: column; align-items: flex-start; }
+    .header-actions { width: 100%; justify-content: flex-start; margin-top: var(--spacing-xs); }
+    .header-auth-controls { width: 100%; justify-content: space-between; }
     .detail-grid { grid-template-columns: 1fr; }
     .tabs { flex-wrap: nowrap; }
     .header h1 { font-size: 1.8rem; }
