@@ -62,121 +62,68 @@
                         Your report is protected by zero-knowledge case code hashing (ADR-0001). No IP addresses or identifying device metadata are ever recorded.
                     </p>
                 </div>
-                <div class="zk-pill">
-                    <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    Zero-Knowledge Encrypted
-                </div>
             </div>
 
             <form id="submit-form" onsubmit="submitReport(event)">
-                <div class="form-group">
-                    <label for="submit-category">Issue Category</label>
-                    <select id="submit-category" required>
-                        <option value="SECURITY">Security — Vulnerability, credential leak, data breach</option>
-                        <option value="HARASSMENT">Harassment — Workplace abuse, misconduct, discrimination</option>
-                        <option value="CORRUPTION">Corruption — Bribery, embezzlement, fraud, kickbacks</option>
-                        <option value="TECHNICAL">Technical — Safety defect, system sabotage, negligence</option>
-                        <option value="OTHER">Other — General confidential concern</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="submit-desc">Report Description</label>
-                    <textarea id="submit-desc" required placeholder="Provide all relevant details anonymously. Avoid including your own identifying details or credentials..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="submit-evidence">Image Evidence (Optional, max 5 MB)</label>
-                    <div class="dropzone" id="evidence-dropzone" tabindex="0" role="button" aria-label="Dropzone for image evidence upload">
-                        <input type="file" id="submit-evidence" accept="image/jpeg,image/png,image/webp" class="dropzone-input" aria-label="Upload evidence file">
-                        <div class="dropzone-body" id="dropzone-prompt">
-                            <div class="dropzone-icon">
-                                <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                            </div>
-                            <div class="dropzone-text">
-                                <div class="dropzone-title">Drop evidence image here, or <span class="dropzone-browse">browse</span></div>
-                                <div class="dropzone-meta">Supports PNG, JPEG, or WebP up to 5 MB</div>
-                            </div>
+                <div class="submit-grid">
+                    <div class="submit-col">
+                        <div class="form-group">
+                            <label for="submit-category">Issue Category</label>
+                            <select id="submit-category" required>
+                                <option value="SECURITY">Security — Vulnerability, credential leak, data breach</option>
+                                <option value="HARASSMENT">Harassment — Workplace abuse, misconduct, discrimination</option>
+                                <option value="CORRUPTION">Corruption — Bribery, embezzlement, fraud, kickbacks</option>
+                                <option value="TECHNICAL">Technical — Safety defect, system sabotage, negligence</option>
+                                <option value="OTHER">Other — General confidential concern</option>
+                            </select>
                         </div>
 
-                        <div class="dropzone-file-selected hidden" id="dropzone-file-selected">
-                            <div class="dropzone-file-info">
-                                <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                <div>
-                                    <div class="dropzone-filename" id="dropzone-filename">file.png</div>
-                                    <div class="dropzone-filesize" id="dropzone-filesize">1.2 MB</div>
+                        <div class="form-group submit-desc-group">
+                            <label for="submit-desc">Report Description</label>
+                            <textarea id="submit-desc" required placeholder="Provide all relevant details anonymously. Avoid including your own identifying details or credentials..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="submit-col">
+                        <div class="form-group submit-evidence-group">
+                            <label for="submit-evidence">Image Evidence (Optional, max 5 MB)</label>
+                            <div class="dropzone" id="evidence-dropzone" tabindex="0" role="button" aria-label="Dropzone for image evidence upload">
+                                <input type="file" id="submit-evidence" accept="image/jpeg,image/png,image/webp" class="dropzone-input" aria-label="Upload evidence file">
+                                <div class="dropzone-body" id="dropzone-prompt">
+                                    <div class="dropzone-icon">
+                                        <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                    </div>
+                                    <div class="dropzone-text">
+                                        <div class="dropzone-title">Drop evidence image here, or <span class="dropzone-browse">browse</span></div>
+                                        <div class="dropzone-meta">Supports PNG, JPEG, or WebP up to 5 MB</div>
+                                    </div>
+                                </div>
+
+                                <div class="dropzone-file-selected hidden" id="dropzone-file-selected">
+                                    <div class="dropzone-file-info">
+                                        <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                        <div>
+                                            <div class="dropzone-filename" id="dropzone-filename">file.png</div>
+                                            <div class="dropzone-filesize" id="dropzone-filesize">1.2 MB</div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-ghost btn-sm dropzone-remove-btn" id="dropzone-remove-btn" onclick="clearEvidenceFile(event)" title="Remove attached file" aria-label="Remove attached evidence file">
+                                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                    </button>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-ghost btn-sm dropzone-remove-btn" id="dropzone-remove-btn" onclick="clearEvidenceFile(event)" title="Remove attached file" aria-label="Remove attached evidence file">
-                                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                            </button>
-                        </div>
-
-                        <div class="dropzone-scrub-badge" id="dropzone-scrub-notice">
-                            <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                            <span><strong>In-Memory EXIF Scrubbing:</strong> Device GPS coordinates, camera model, and creation timestamps are physically stripped in RAM before storage.</span>
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-submit-report" id="btn-submit">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    Submit Report Securely
-                </button>
-                <div id="submit-error" class="error-message hidden"></div>
-            </form>
-        </div>
-
-        <div class="card hidden" id="success-card">
-            <div class="success-header">
-                <div class="success-icon-badge">
-                    <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                </div>
-                <div>
-                    <h2 class="success-title">Report Submitted Securely</h2>
-                    <p class="success-subtitle">
-                        Your confidential report has been received and registered under zero-knowledge encryption.
-                    </p>
-                </div>
-            </div>
-
-            <div class="case-code-card">
-                <div class="case-code-card-header">
-                    <div class="case-code-label">
-                        <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        Your Secret Zero-Knowledge Case Code
-                    </div>
-                    <span class="badge badge-zk">One-Time Reveal</span>
-                </div>
-                <div class="case-code-value-wrap">
-                    <div class="case-code" id="success-case-code">WD-XXXX-XXXX</div>
-                    <button type="button" class="btn btn-outline btn-copy-case-code" id="btn-copy-code" onclick="copyCaseCode()">
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                        Copy Case Code
+                <div class="submit-actions-row">
+                    <button type="submit" class="btn btn-primary btn-submit-report" id="btn-submit">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Submit Report Securely
                     </button>
                 </div>
-            </div>
-
-            <div class="warning-box zk-warning-card">
-                <div class="zk-warning-title">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
-                    <strong>CRITICAL ZERO-KNOWLEDGE NOTICE (ADR-0001)</strong>
-                </div>
-                <p>
-                    Save this Case Code immediately in a secure location. WhistleDrop stores only a one-way cryptographic SHA-256 hash.
-                    This plaintext code is <strong>NEVER shown again and cannot be recovered</strong> by anyone, including system administrators.
-                </p>
-            </div>
-
-            <div class="success-actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
-                <button type="button" class="btn btn-primary btn-lg" id="btn-track-submitted-case" onclick="trackCaseFromSuccess()">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    Track This Case Now
-                </button>
-                <button type="button" class="btn btn-outline btn-lg" onclick="resetSubmit()">
-                    Submit Another Report
-                </button>
-            </div>
+                <div id="submit-error" class="error-message hidden" style="margin-top: 12px;"></div>
+            </form>
         </div>
     </div>
 
@@ -552,6 +499,47 @@
                     <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
                     Confirm Permanent Closure
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACCESSIBLE SUBMIT REPORT SUCCESS DIALOG MODAL -->
+    <div id="submit-success-modal" class="dialog-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="success-modal-title" onclick="handleSuccessModalOverlayClick(event)">
+        <div class="dialog-content" onclick="event.stopPropagation()">
+            <div class="dialog-header">
+                <div class="success-icon-badge" style="margin-bottom: 8px;">
+                    <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <h3 id="success-modal-title" class="dialog-title" style="display: flex; align-items: center; gap: 8px;">
+                    Report Submitted Securely
+                </h3>
+                <p class="dialog-description">
+                    Your confidential report has been received and registered under zero-knowledge encryption.
+                </p>
+                <button type="button" class="dialog-close" onclick="closeSuccessModal()" aria-label="Close dialog">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="case-code-card">
+                <div class="case-code-card-header">
+                    <div class="case-code-label">
+                        <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Your Secret Zero-Knowledge Case Code
+                    </div>
+                    <span class="badge badge-zk">One-Time Reveal</span>
+                </div>
+                <div class="case-code-value-wrap">
+                    <div class="case-code" id="success-case-code">WD-XXXX-XXXX</div>
+                    <button type="button" class="btn btn-outline btn-copy-case-code" id="btn-copy-code" onclick="copyCaseCode()">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        Copy Case Code
+                    </button>
+                </div>
+            </div>
+
+            <div class="dialog-footer">
+                <button type="button" class="btn btn-primary" id="btn-close-success-modal" onclick="closeSuccessModal()">Close</button>
             </div>
         </div>
     </div>

@@ -798,6 +798,69 @@ textarea {
     user-select: none;
 }
 
+/* Submit Report Grid Layout */
+.submit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.submit-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.submit-desc-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.submit-desc-group textarea {
+    flex: 1;
+    min-height: 120px;
+}
+
+.submit-evidence-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.submit-evidence-group .dropzone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 180px;
+}
+
+.submit-actions-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+#submit-success-modal .dialog-content {
+    max-width: 480px;
+}
+
+@media (max-width: 768px) {
+    .submit-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .submit-desc-group {
+        margin-bottom: 16px;
+    }
+    .submit-evidence-group .dropzone {
+        min-height: 140px;
+    }
+}
+
 /* In-Memory Scrubbed Evidence Dropzone */
 .dropzone {
     border: 1px dashed var(--border);

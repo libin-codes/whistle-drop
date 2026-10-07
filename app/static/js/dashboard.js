@@ -151,6 +151,20 @@ function handleClosureModalOverlayClick(e) {
     }
 }
 
+function closeSuccessModal() {
+    const modal = document.getElementById('submit-success-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    resetSubmit();
+}
+
+function handleSuccessModalOverlayClick(e) {
+    if (e.target && e.target.id === 'submit-success-modal') {
+        closeSuccessModal();
+    }
+}
+
 // Global Escape key listener for accessible modal dismissal
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -161,6 +175,10 @@ document.addEventListener('keydown', (e) => {
         const closureModal = document.getElementById('mod-close-confirm-modal');
         if (closureModal && !closureModal.classList.contains('hidden')) {
             closeClosureModal();
+        }
+        const successModal = document.getElementById('submit-success-modal');
+        if (successModal && !successModal.classList.contains('hidden')) {
+            closeSuccessModal();
         }
     }
 });
@@ -293,7 +311,6 @@ function handleFileSelection() {
         const file = fileInput.files[0];
         if (file.size > 5 * 1024 * 1024) {
             showError('submit-error', 'Evidence file exceeds maximum size of 5 MB.');
-            showToast('File Too Large', 'Evidence file must be 5 MB or smaller.', 'error');
             clearEvidenceFile();
             return;
         }
@@ -547,10 +564,15 @@ async function submitReport(e) {
         // Clear dropzone file selection
         clearEvidenceFile();
 
-        // Display success
-        document.getElementById('submit-card').classList.add('hidden');
-        document.getElementById('success-card').classList.remove('hidden');
-        document.getElementById('success-case-code').textContent = repData.case_code;
+        // Display success popup modal
+        const modal = document.getElementById('submit-success-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+        const caseCodeEl = document.getElementById('success-case-code');
+        if (caseCodeEl) {
+            caseCodeEl.textContent = repData.case_code;
+        }
         showToast('Report Submitted Securely', 'Your report is registered. Save your Case Code below!', 'success', 6000);
 
     } catch (err) {
@@ -561,25 +583,27 @@ async function submitReport(e) {
 }
 
 function resetSubmit() {
-    document.getElementById('submit-form').reset();
+    const form = document.getElementById('submit-form');
+    if (form) form.reset();
     clearEvidenceFile();
     clearError('submit-error');
-    document.getElementById('submit-card').classList.remove('hidden');
-    document.getElementById('success-card').classList.add('hidden');
+    const modal = document.getElementById('submit-success-modal');
+    if (modal) modal.classList.add('hidden');
 }
 
 function copyCaseCode() {
-    const code = document.getElementById('success-case-code').textContent.trim();
+    const caseCodeEl = document.getElementById('success-case-code');
+    const code = caseCodeEl ? caseCodeEl.textContent.trim() : '';
+    if (!code) return;
     navigator.clipboard.writeText(code).then(() => {
         const btn = document.getElementById('btn-copy-code');
-        btn.innerHTML = `${getIcon('check', 'icon icon-sm')} Copied!`;
-        showToast('Case Code Copied', 'Your confidential Case Code was copied to clipboard.', 'info', 3000);
-        setTimeout(() => {
-            btn.innerHTML = `${getIcon('copy', 'icon icon-sm')} Copy Case Code`;
-        }, 2000);
-    }).catch(() => {
-        showToast('Case Code', code, 'info', 6000);
-    });
+        if (btn) {
+            btn.innerHTML = `${getIcon('check', 'icon icon-sm')} Copied!`;
+            setTimeout(() => {
+                btn.innerHTML = `${getIcon('copy', 'icon icon-sm')} Copy Case Code`;
+            }, 2000);
+        }
+    }).catch(() => {});
 }
 
 // --- Tab 2: Track Logic ---
@@ -745,8 +769,6 @@ async function modLogin(e) {
         if (unauthActions) unauthActions.classList.add('hidden');
         if (authActions) authActions.classList.remove('hidden');
 
-        showToast('Authenticated', 'Welcome back, ' + username + '. Accessing Triage Workspace.', 'success');
-
         // Switch to Triage Workspace
         switchWorkspace('triage');
 
@@ -783,8 +805,6 @@ function modLogout() {
     // Return to public whistleblower view
     switchWorkspace('whistleblower');
     switchTab('submit');
-
-    showToast('Logged Out', 'Moderator session terminated.', 'info');
 }
 
 async function fetchModReports() {
@@ -982,7 +1002,7 @@ async function viewModReport(reportId) {
         if (detailView) detailView.classList.remove('hidden');
 
     } catch (err) {
-        showToast('Error', 'Failed to load report: ' + err.message, 'error');
+        console.error('Failed to load report:', err);
     }
 }
 
@@ -1028,7 +1048,6 @@ async function advanceStatus(targetStatus) {
         }
 
         if (noteInput) noteInput.value = '';
-        showToast('Status Updated', `Report #${currentModReportId} advanced to ${targetStatus.replace(/_/g, ' ')}.`, 'success');
 
         await viewModReport(currentModReportId);
         await fetchModReports();
@@ -1067,7 +1086,6 @@ async function sendModReply(e) {
         }
 
         textInput.value = '';
-        showToast('Message Sent', 'Dead Drop reply posted to whistleblower.', 'success');
         await viewModReport(currentModReportId);
 
     } catch (err) {
@@ -1115,13 +1133,6 @@ async function executePermanentClosure() {
         closeClosureModal();
         if (reasonInput) reasonInput.value = '';
 
-        showToast(
-            'Case Permanently Closed',
-            'ADR-0002 data minimization enforced: description redacted, evidence shredded, thread frozen.',
-            'destructive',
-            6000
-        );
-
         await viewModReport(currentModReportId);
         await fetchModReports();
 
@@ -1161,6 +1172,8 @@ window.trackCaseFromSuccess = trackCaseFromSuccess;
 window.copyCaseCode = copyCaseCode;
 window.submitReport = submitReport;
 window.resetSubmit = resetSubmit;
+window.closeSuccessModal = closeSuccessModal;
+window.handleSuccessModalOverlayClick = handleSuccessModalOverlayClick;
 window.trackReport = trackReport;
 window.resetTrack = resetTrack;
 window.sendTrackReply = sendTrackReply;

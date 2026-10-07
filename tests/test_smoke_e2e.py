@@ -406,17 +406,16 @@ class TestEndToEndSmoke:
         assert 'id="submit-desc"' in html
         assert 'id="submit-evidence"' in html
         assert 'id="evidence-dropzone"' in html
-        assert "In-Memory EXIF Scrubbing" in html
         assert 'id="btn-submit"' in html
         assert 'id="submit-error"' in html
 
-        # 4. High-visibility zero-knowledge Case Code reveal card
-        assert 'id="success-card"' in html
+        # 4. High-visibility zero-knowledge Case Code reveal modal dialog
+        assert 'id="submit-success-modal"' in html
         assert 'id="success-case-code"' in html
         assert 'id="btn-copy-code"' in html
         assert "copyCaseCode" in html
-        assert 'id="btn-track-submitted-case"' in html
-        assert "trackCaseFromSuccess" in html
+        assert 'id="btn-close-success-modal"' in html
+        assert "closeSuccessModal" in html
         assert "Zero-Knowledge" in html or "zero-knowledge" in html.lower()
 
         # 5. Tracking view components
