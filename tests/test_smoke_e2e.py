@@ -337,8 +337,10 @@ class TestEndToEndSmoke:
         assert "mod-login-error" in html
         assert "closeLoginModal" in html
 
-        # 5. Authenticated header navigation elements (role separation & consistent button styling)
-        assert "mod-badge" in html
+        # 5. Authenticated header navigation elements (streamlined outline logout button, badge omitted)
+        assert "mod-badge" not in html
+        assert "mod-identity-badge" not in html
+        assert "Moderator: moderator" not in html
         assert "btn-mod-logout" in html
         assert 'class="btn btn-outline" id="btn-open-mod-login"' in html
         assert 'class="btn btn-outline" id="btn-mod-logout"' in html
@@ -531,6 +533,8 @@ class TestEndToEndSmoke:
 
         # 5. Dynamic Status Workflow transition action bar & public update note
         assert 'id="mod-workflow-section"' in html
+        assert "Status Workflow Transition" in html
+        assert "Forward-only deterministic lifecycle" not in html
         assert 'id="mod-status-note"' in html
         assert 'id="mod-status-actions"' in html
         assert 'id="mod-status-error"' in html
@@ -595,6 +599,83 @@ class TestEndToEndSmoke:
         assert "executePermanentClosure" in js
         assert "formatRelativeTime" in js
         assert "escapeHtml" in js
+
+    async def test_streamline_authenticated_header_and_remove_workflow_subtitle(self, client):
+        """Issue #20 acceptance criteria:
+        - The 'Moderator: moderator' identity badge is completely removed from the authenticated top navigation bar.
+        - The top navigation bar displays a styled outline Logout button when authenticated.
+        - Client-side JavaScript correctly initializes and manages authenticated sessions without referencing the removed badge elements.
+        - The 'Forward-only deterministic lifecycle' subtitle is removed from the Status Workflow section header.
+        - The Status Workflow section header cleanly displays 'Status Workflow Transition' without subtitles.
+        - Automated end-to-end tests verify that the badge and subtitle are not present in rendered responses and that authentication and logout still function properly.
+        """
+        resp = await client.get("/")
+        assert resp.status_code == 200
+        html = resp.text
+
+        # 1. Moderator badge is completely absent from HTML
+        assert "mod-badge" not in html
+        assert "mod-identity-badge" not in html
+        assert "Moderator: moderator" not in html
+
+        # 2. Top nav contains outline logout button
+        assert 'id="btn-mod-logout"' in html
+        assert 'class="btn btn-outline" id="btn-mod-logout"' in html
+        assert 'id="auth-header-actions"' in html
+
+        # 3. Status Workflow header cleanly displays 'Status Workflow Transition' without subtitle
+        assert "Status Workflow Transition" in html
+        assert "Forward-only deterministic lifecycle" not in html
+
+        # 4. JavaScript does not reference removed badge elements
+        js_resp = await client.get("/static/js/dashboard.js")
+        assert js_resp.status_code == 200
+        js = js_resp.text
+        assert "mod-badge-username" not in js
+        assert "mod-badge" not in js
+        assert "mod-identity-badge" not in js
+        assert "modLogin" in js
+        assert "modLogout" in js
+
+        # 5. Moderator login and authentication session functionality
+        login_resp = await client.post(
+            "/api/v1/auth/login",
+            json={"username": "moderator", "password": "moderator123"},
+        )
+        assert login_resp.status_code == 200
+        token = login_resp.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # 6. Status workflow transitions remain fully functional
+        create_resp = await client.post(
+            "/api/v1/reports",
+            json={"category": "SECURITY", "description": "Security report for workflow test"},
+        )
+        assert create_resp.status_code == 201
+        case_code = create_resp.json()["case_code"]
+
+        mod_reports_resp = await client.get("/api/v1/moderator/reports", headers=headers)
+        assert mod_reports_resp.status_code == 200
+        reports = mod_reports_resp.json()
+        assert len(reports) >= 1
+        report_id = reports[0]["id"]
+
+        # Moderator advances status to UNDER_REVIEW
+        patch_resp = await client.patch(
+            f"/api/v1/moderator/reports/{report_id}/status",
+            headers=headers,
+            json={"status": "UNDER_REVIEW", "status_update": "Reviewing security issue"},
+        )
+        assert patch_resp.status_code == 200
+        assert patch_resp.json()["status"] == "UNDER_REVIEW"
+        assert patch_resp.json()["status_update"] == "Reviewing security issue"
+
+        # Whistleblower tracking verifies the transition
+        track_resp = await client.get(f"/api/v1/reports/track/{case_code}")
+        assert track_resp.status_code == 200
+        assert track_resp.json()["status"] == "UNDER_REVIEW"
+        assert track_resp.json()["status_update"] == "Reviewing security issue"
+
 
 
 
