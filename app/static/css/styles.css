@@ -2183,8 +2183,8 @@ textarea {
 }
 
 .detail-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     background: var(--background);
     padding: var(--spacing-md);
@@ -2224,26 +2224,15 @@ textarea {
     margin-top: 2px;
 }
 
-.mod-description-box {
-    white-space: pre-wrap;
-    background: var(--background);
-    padding: 14px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: var(--foreground);
-    word-break: break-word;
+.detail-item-desc {
+    grid-column: 1 / -1;
 }
 
-.detail-grid .mod-description-box {
+.detail-item-desc .mod-description-box {
     margin-top: 4px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    padding: 8px 12px;
-    border-radius: var(--radius);
     min-height: 38px;
 }
+
 
 .btn-evidence-preview {
     color: #60a5fa;
@@ -2303,6 +2292,13 @@ textarea {
     align-self: stretch;
 }
 
+#mod-status-note {
+    flex: 1;
+    width: 100%;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
 #mod-workflow-section.hidden + .inspector-split-divider,
 .inspector-split-divider.hidden {
     display: none;
@@ -2334,7 +2330,7 @@ textarea {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-bottom: 12px;
+   
     flex-wrap: wrap;
     gap: 8px;
 }
@@ -2349,6 +2345,7 @@ textarea {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    width: 100%;
     margin-top: var(--spacing-sm);
 }
 

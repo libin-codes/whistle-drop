@@ -340,7 +340,7 @@
                     </div>
 
                     <!-- Consolidated Overview Card -->
-                    <div class="inspector-overview-card" id="mod-overview-card">
+                    <div id="mod-overview-card">
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <span class="detail-label">Report ID</span>
@@ -349,14 +349,14 @@
                             <div class="detail-item">
                                 <span class="detail-label">Category</span>
                                 <div class="detail-val">
-                                    <span id="mod-det-cat" class="cat-badge"></span>
+                                    <span id="mod-det-cat"></span>
                                 </div>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Submitted At</span>
                                 <div id="mod-det-created" class="detail-val"></div>
                             </div>
-                            <div class="detail-item detail-item-desc" style="flex: 1;">
+                            <div class="detail-item detail-item-desc">
                                 <span class="detail-label">Report Description</span>
                                 <div id="mod-det-desc" class="mod-description-box"></div>
                             </div>
@@ -376,13 +376,16 @@
                     <!-- Responsive Two-Column Split Layout for Workflow and Dead Drop -->
                     <div class="inspector-split-row" id="mod-split-row">
                         <!-- Left Column: Status Workflow Actions -->
-                        <div id="mod-workflow-section" class="triage-section inspector-split-col">
-                            <div class="section-heading-row">
+                        <div id="mod-workflow-section" class="triage-section inspector-split-col" style="flex:1;">
+                            <div class="section-heading-row" >
                                 <h4>Status Workflow Transition</h4>
                             </div>
-                            <div class="form-group">
-                                <label for="mod-status-note">Public Status Update Note (Visible to Whistleblower)</label>
-                                <input type="text" id="mod-status-note" placeholder="e.g. Investigation underway; assigned to senior investigator.">
+                            <div class="form-group" style="height: 100%;">
+                                <textarea
+                                    id="mod-status-note"
+                                    placeholder="e.g. Investigation underway; assigned to senior investigator."
+                                    style="height: 100%;"
+                                ></textarea>
                             </div>
                             <div class="action-buttons" id="mod-status-actions">
                                 <!-- Transition buttons dynamically rendered based on allowed state transitions -->
