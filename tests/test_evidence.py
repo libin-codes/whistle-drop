@@ -132,3 +132,27 @@ async def test_upload_corrupted_image_returns_400(client):
     assert resp.status_code == 400
     assert "Invalid image file" in resp.json()["detail"]
 
+
+@pytest.mark.asyncio
+async def test_delete_evidence_removes_file(client, tmp_path):
+    """delete_evidence unlinks the uploaded file from disk."""
+    from app.evidence import delete_evidence
+
+    data = _make_image_bytes("JPEG")
+    resp = await client.post(
+        "/api/v1/evidence/upload",
+        files={"file": ("to_delete.jpg", data, "image/jpeg")},
+    )
+    url = resp.json()["url"]
+    filename = url.split("/")[-1]
+    filepath = tmp_path / filename
+    assert filepath.exists()
+
+    result = delete_evidence(url)
+    assert result is True
+    assert not filepath.exists()
+
+    # Deleting non-existent file returns False gracefully
+    assert delete_evidence(url) is False
+    assert delete_evidence(None) is False
+

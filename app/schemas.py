@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class CategoryIn(str, Enum):
@@ -52,6 +52,29 @@ class ReportStatus(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def from_report(cls, report: Any) -> "ReportStatus":
+        category_val = (
+            report.category.value
+            if hasattr(report.category, "value")
+            else str(report.category)
+        )
+        status_val = (
+            report.status.value
+            if hasattr(report.status, "value")
+            else str(report.status)
+        )
+        return cls(
+            category=category_val,
+            status=status_val,
+            status_note=report.status_note,
+            status_update=report.status_note,
+            created_at=report.created_at,
+            updated_at=report.updated_at,
+        )
+
 
 class EvidenceUploaded(BaseModel):
     url: str
@@ -85,6 +108,32 @@ class ModeratorReportResponse(BaseModel):
     status_update: str | None = None
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def from_report(cls, report: Any) -> "ModeratorReportResponse":
+        category_val = (
+            report.category.value
+            if hasattr(report.category, "value")
+            else str(report.category)
+        )
+        status_val = (
+            report.status.value
+            if hasattr(report.status, "value")
+            else str(report.status)
+        )
+        return cls(
+            id=report.id,
+            category=category_val,
+            description=report.description,
+            evidence_url=report.evidence_url,
+            status=status_val,
+            status_note=report.status_note,
+            status_update=report.status_note,
+            created_at=report.created_at,
+            updated_at=report.updated_at,
+        )
 
 
 class ReportStatusUpdate(BaseModel):
