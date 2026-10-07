@@ -754,9 +754,7 @@ async function modLogin(e) {
         const data = await res.json();
         modToken = data.access_token;
 
-        // Update badge and username displays
-        const badgeUser = document.getElementById('mod-badge-username');
-        if (badgeUser) badgeUser.textContent = username;
+        // Update username display in triage workspace
         const currentUser = document.getElementById('mod-current-user');
         if (currentUser) currentUser.textContent = 'Logged in as: ' + username;
 
@@ -796,6 +794,8 @@ function modLogout() {
     if (authActions) authActions.classList.add('hidden');
 
     // Reset moderator views
+    const currentUser = document.getElementById('mod-current-user');
+    if (currentUser) currentUser.textContent = '';
     const tabMod = document.getElementById('tab-mod');
     if (tabMod) tabMod.classList.remove('active');
     closeModDetail();

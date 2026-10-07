@@ -24,14 +24,8 @@
                         Moderator Login
                     </button>
                 </div>
-                <!-- Authenticated State: Identity Badge & Consistent Logout Button -->
+                <!-- Authenticated State: Styled Outline Logout Button -->
                 <div id="auth-header-actions" class="header-auth-controls hidden">
-                    <div class="mod-identity-badge" id="mod-identity-badge">
-                        <span class="badge badge-moderator" id="mod-badge">
-                            <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                            Moderator: <span id="mod-badge-username">moderator</span>
-                        </span>
-                    </div>
                     <button type="button" class="btn btn-outline" id="btn-mod-logout" onclick="modLogout()" title="Log out of Moderator Portal">
                         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                         Logout
@@ -348,7 +342,6 @@
                     <div id="mod-workflow-section" class="triage-section">
                         <div class="section-heading-row">
                             <h4>Status Workflow Transition</h4>
-                            <span class="section-subtitle">Forward-only deterministic lifecycle</span>
                         </div>
                         <div class="form-group">
                             <label for="mod-status-note">Public Status Update Note (Visible to Whistleblower)</label>
