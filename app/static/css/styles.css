@@ -1674,7 +1674,15 @@ textarea {
 }
 
 /* Triage Filters Toolbar with Search */
-.triage-filters,
+.triage-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: nowrap;
+}
+
 .filters {
     display: flex;
     gap: 12px;
@@ -1685,8 +1693,10 @@ textarea {
 
 .triage-search-wrap {
     position: relative;
-    flex: 1 1 260px;
-    min-width: 220px;
+    flex: 0 0 320px;
+    width: 320px;
+    max-width: 320px;
+    min-width: 240px;
     display: flex;
     align-items: center;
 }
@@ -1725,7 +1735,9 @@ textarea {
 .triage-filter-selects {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap;
+    align-items: center;
+    margin-left: auto;
+    flex-wrap: nowrap;
 }
 
 .triage-filter-selects select,
@@ -1739,6 +1751,23 @@ textarea {
     color: var(--foreground);
     min-width: 140px;
     cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .triage-filters {
+        flex-wrap: wrap;
+    }
+    .triage-search-wrap {
+        flex: 1 1 100%;
+        max-width: 100%;
+        width: 100%;
+    }
+    .triage-filter-selects {
+        width: 100%;
+        justify-content: flex-start;
+        margin-left: 0;
+        flex-wrap: wrap;
+    }
 }
 
 /* Full-Width Triage Reports Table */
@@ -1862,10 +1891,35 @@ textarea {
     width: 130px;
 }
 
-.reports-table .col-actions {
+.reports-table .col-actions,
+.reports-table .col-chevron {
     text-align: right;
     white-space: nowrap;
-    width: 90px;
+    width: 48px;
+    padding-right: 16px;
+}
+
+.reports-table .th-actions,
+.reports-table .th-chevron,
+.reports-table .th-trailing {
+    width: 48px;
+    text-align: right;
+    padding-right: 16px;
+}
+
+.row-chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+    opacity: 0.5;
+    transition: transform 0.15s ease, opacity 0.15s ease, color 0.15s ease;
+}
+
+.reports-table tbody tr:hover .row-chevron {
+    opacity: 1;
+    color: var(--foreground);
+    transform: translateX(3px);
 }
 
 .btn-view-report {
@@ -2164,6 +2218,72 @@ textarea {
     color: #93c5fd;
 }
 
+/* Consolidated Overview Card */
+.inspector-overview-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.inspector-overview-card .detail-grid {
+    margin-bottom: 0;
+}
+
+/* Two-Column Responsive Split Layout for Workflow and Dead Drop */
+.inspector-split-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 8px;
+    margin-bottom: 24px;
+    align-items: stretch;
+}
+
+.inspector-split-col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.inspector-split-col.triage-section {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.inspector-split-divider {
+    width: 1px;
+    background-color: var(--border);
+    flex-shrink: 0;
+    align-self: stretch;
+}
+
+#mod-workflow-section.hidden + .inspector-split-divider,
+.inspector-split-divider.hidden {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .inspector-split-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .inspector-split-divider {
+        display: none;
+    }
+
+    .inspector-split-col + .inspector-split-col {
+        border-top: 1px solid var(--border);
+        padding-top: 20px;
+    }
+}
+
 .triage-section {
     margin-top: 24px;
     padding-top: 18px;
@@ -2206,6 +2326,7 @@ textarea {
 
 /* Permanent Closure Section & Confirmation Modal (ADR-0002) */
 .mod-close-section {
+    width: 100%;
     border: 1px solid rgba(239, 68, 68, 0.35);
     border-radius: var(--radius);
     background: rgba(239, 68, 68, 0.04);

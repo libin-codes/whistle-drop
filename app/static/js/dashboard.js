@@ -16,7 +16,8 @@ const ICONS = {
     arrowLeft: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
     user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
     upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
-    externalLink: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/>'
+    externalLink: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/>',
+    chevronRight: '<path d="m9 18 6-6-6-6"/>'
 };
 
 function getIcon(name, className = 'icon') {
@@ -966,10 +967,8 @@ function renderModReportsTable(reports) {
             </td>
             <td class="col-status"><span class="badge ${r.status}">${r.status.replace(/_/g, ' ')}</span></td>
             <td class="col-time"><span class="report-timestamp" title="${fullDate}">${relTime}</span></td>
-            <td class="col-actions">
-                <button type="button" class="btn btn-outline btn-sm btn-view-report" onclick="event.stopPropagation(); viewModReport(${r.id});" aria-label="View Report #${r.id}">
-                    View
-                </button>
+            <td class="col-actions col-chevron" aria-label="View Report #${r.id}">
+                <span class="row-chevron" aria-hidden="true">${getIcon('chevronRight', 'icon icon-sm chevron-icon')}</span>
             </td>
         `;
         list.appendChild(tr);
@@ -1051,6 +1050,7 @@ async function viewModReport(reportId) {
         const closeSection = document.getElementById('mod-close-section');
         const replyForm = document.getElementById('mod-reply-form');
         const frozenNotice = document.getElementById('mod-thread-frozen-notice');
+        const splitDivider = document.querySelector('.inspector-split-divider');
         const actions = document.getElementById('mod-status-actions');
         actions.innerHTML = '';
 
@@ -1059,11 +1059,13 @@ async function viewModReport(reportId) {
             closeSection.classList.add('hidden');
             replyForm.classList.add('hidden');
             frozenNotice.classList.remove('hidden');
+            if (splitDivider) splitDivider.classList.add('hidden');
         } else {
             workflowSection.classList.remove('hidden');
             closeSection.classList.remove('hidden');
             replyForm.classList.remove('hidden');
             frozenNotice.classList.add('hidden');
+            if (splitDivider) splitDivider.classList.remove('hidden');
 
             // Render forward transitions based on state machine
             if (data.status === 'SUBMITTED') {
@@ -1093,7 +1095,7 @@ async function viewModReport(reportId) {
         renderThread('mod-thread', data.messages);
 
         // Focus Back button for accessibility
-        const backBtn = document.getElementById('btn-mod-back');
+        const backBtn = document.getElementById('btn-mod-close-detail') || document.getElementById('btn-mod-back');
         if (backBtn) backBtn.focus();
 
     } catch (err) {

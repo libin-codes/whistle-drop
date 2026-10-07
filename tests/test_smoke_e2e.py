@@ -700,7 +700,8 @@ class TestEndToEndSmoke:
         assert '<th scope="col" class="th-evidence">Evidence Indicator</th>' in html
         assert '<th scope="col" class="th-status">Status</th>' in html
         assert '<th scope="col" class="th-time">Submitted Timestamp</th>' in html
-        assert '<th scope="col" class="th-actions">Actions</th>' in html
+        assert '<th scope="col" class="th-actions"' in html
+        assert '<th scope="col" class="th-actions">Actions</th>' not in html
         assert 'id="mod-report-list"' in html
 
         # 2. Real-time client-side search input field and toolbar
@@ -722,7 +723,7 @@ class TestEndToEndSmoke:
         assert "reports-table" in css
         assert "triage-table-wrap" in css
         assert "report-desc-preview" in css
-        assert "btn-view-report" in css
+        assert "row-chevron" in css or "col-chevron" in css
         assert "triage-table-empty" in css
         assert "triage-search-input" in css
 
@@ -735,7 +736,7 @@ class TestEndToEndSmoke:
         assert "fetchModReports" in js
         assert "viewModReport" in js
         assert "mod-search-input" in js
-        assert "btn-view-report" in js
+        assert "row-chevron" in js or "chevronRight" in js
         assert "triage-table-empty" in js
 
         # 6. Verify backend API integration with query filters for moderator reports
@@ -779,14 +780,15 @@ class TestEndToEndSmoke:
         assert resp.status_code == 200
         html = resp.text
 
-        # Full-width details view and top navigation bar
+        # Full-width details view and header Back action (ticket #29 removed secondary top nav bar)
         assert 'id="mod-detail-view"' in html
         assert 'triage-detail-pane' in html
         assert 'id="mod-detail-content"' in html
-        assert 'mod-detail-nav-bar' in html
-        assert 'id="btn-mod-back"' in html
+        assert 'mod-detail-nav-bar' not in html
+        assert '← Back to Reports' not in html
+        assert 'id="btn-mod-close-detail"' in html
         assert 'onclick="closeModDetail()"' in html
-        assert '← Back to Reports' in html
+        assert 'Back' in html
 
         # Report Metadata & Description
         assert 'id="mod-detail-heading"' in html
@@ -823,12 +825,11 @@ class TestEndToEndSmoke:
         assert 'id="mod-close-confirm-modal"' in html
         assert 'id="btn-confirm-permanent-close"' in html
 
-        # 2. CSS Stylesheet Delivery: Drill-down layout, nav bar, and prominent back button
+        # 2. CSS Stylesheet Delivery: Drill-down layout and prominent back button
         css_resp = await client.get("/static/css/styles.css")
         assert css_resp.status_code == 200
         css = css_resp.text
         assert "triage-detail-pane" in css
-        assert "mod-detail-nav-bar" in css
         assert "btn-mod-back" in css
         assert "mod-description-box" in css
         assert "btn-evidence-preview" in css
@@ -1043,6 +1044,145 @@ class TestEndToEndSmoke:
         js = js_resp.text
         assert "msg-date-separator" in js or "thread-date-separator" in js
         assert "msg-time" in js or "msg-timestamp" in js
+
+    async def test_ticket_29_moderator_triage_filters_chevron_and_split_inspector(self, client, auth_headers):
+        """Ticket 29 acceptance criteria verification:
+        1. Queue filter toolbar renders as a single row containing a fixed-width search field on the left
+           and status/category filters aligned on the right.
+        2. Total results count badge appears directly to the left of the Refresh button in the triage queue header.
+        3. Reports queue table displays a subtle trailing column header, and each report row displays a right chevron
+           icon in the trailing cell instead of a "View" button.
+        4. Clicking any row (or pressing Enter/Space) opens the report inspector.
+        5. Secondary top "← Back to Reports" navigation bar in the inspector is removed.
+        6. Inspector header action button is labeled "Back" with a back arrow icon, and clicking it closes the inspector
+           and returns to the queue.
+        7. Report ID, Submitted At, Report Description, and Scrubbed Evidence File link are rendered inside a single
+           consolidated overview container.
+        8. Status Workflow Transition panel and Dead Drop Message Thread panel are arranged side-by-side in a two-column
+           row with a vertical divider on desktop screens.
+        9. Side-by-side layout collapses cleanly to stacked columns on smaller viewports.
+        10. Permanent Case Closure section spans full-width directly below the two-column split row.
+        11. All automated end-to-end smoke and lifecycle tests continue to pass.
+        """
+        resp = await client.get("/")
+        assert resp.status_code == 200
+        html = resp.text
+
+        # 1. Total results count badge directly to the left of the Refresh button in triage queue header
+        pane_header_start = html.find('class="triage-pane-header"')
+        assert pane_header_start != -1
+        pane_header_end = html.find('id="mod-filters"', pane_header_start)
+        header_snippet = html[pane_header_start:pane_header_end]
+        assert 'id="mod-queue-count"' in header_snippet
+        assert 'id="btn-mod-refresh"' in header_snippet
+        assert header_snippet.find('id="mod-queue-count"') < header_snippet.find('id="btn-mod-refresh"')
+        # Ensure count badge is removed from the title row beside heading
+        title_row_start = header_snippet.find('class="triage-title-row"')
+        assert title_row_start != -1
+        title_row_end = header_snippet.find('</div>', title_row_start)
+        assert 'id="mod-queue-count"' not in header_snippet[title_row_start:title_row_end]
+
+        # 2. Queue filter toolbar markup & fixed-width styling
+        assert 'id="mod-filters"' in html
+        assert 'class="triage-filters"' in html
+        assert 'id="mod-search-input"' in html
+        assert 'id="mod-filter-status"' in html
+        assert 'id="mod-filter-category"' in html
+
+        css_resp = await client.get("/static/css/styles.css")
+        assert css_resp.status_code == 200
+        css = css_resp.text
+        assert "triage-filters" in css
+        assert "triage-search-wrap" in css
+        assert "triage-filter-selects" in css
+
+        # 3. Queue table subtle trailing column header and chevron icon
+        assert '<th scope="col" class="th-actions"' in html
+        assert '<th scope="col" class="th-actions">Actions</th>' not in html
+
+        js_resp = await client.get("/static/js/dashboard.js")
+        assert js_resp.status_code == 200
+        js = js_resp.text
+        assert "chevronRight" in js
+        assert "row-chevron" in js or "col-chevron" in js
+        assert "btn-view-report" not in js
+
+        # 4. Row click & keydown handlers
+        assert "viewModReport(r.id)" in js
+        assert "Enter" in js and "viewModReport" in js
+
+        # 5. Secondary top "← Back to Reports" bar removed
+        assert "mod-detail-nav-bar" not in html
+        assert "← Back to Reports" not in html
+
+        # 6. Inspector header Back button
+        assert 'id="btn-mod-close-detail"' in html
+        close_btn_idx = html.find('id="btn-mod-close-detail"')
+        close_btn_end = html.find('</button>', close_btn_idx)
+        close_btn_snippet = html[close_btn_idx:close_btn_end]
+        assert "Back" in close_btn_snippet
+        assert "Close Inspector" not in close_btn_snippet
+        assert "m12 19-7-7 7-7" in close_btn_snippet or "arrowLeft" in close_btn_snippet
+
+        # 7. Single consolidated overview container
+        assert 'id="mod-overview-card"' in html or 'class="inspector-overview-card"' in html
+        card_start = html.find('id="mod-overview-card"')
+        if card_start == -1:
+            card_start = html.find('class="inspector-overview-card"')
+        assert card_start != -1
+        # Overview card must encompass ID, Created, Description, and Evidence
+        card_end = html.find('id="mod-split-row"', card_start)
+        overview_snippet = html[card_start:card_end]
+        assert 'id="mod-det-id"' in overview_snippet
+        assert 'id="mod-det-created"' in overview_snippet
+        assert 'id="mod-det-desc"' in overview_snippet
+        assert 'id="mod-det-evidence-container"' in overview_snippet
+
+        # 8 & 9. Responsive two-column split row with divider and responsive collapse
+        assert 'id="mod-split-row"' in html or 'class="inspector-split-row"' in html
+        assert 'class="inspector-split-divider"' in html or 'inspector-split-divider' in html
+        split_row_start = html.find('id="mod-split-row"')
+        if split_row_start == -1:
+            split_row_start = html.find('class="inspector-split-row"')
+        closure_start = html.find('id="mod-close-section"')
+        assert split_row_start < closure_start, "Split row must precede permanent closure section"
+        split_row_snippet = html[split_row_start:closure_start]
+        assert 'id="mod-workflow-section"' in split_row_snippet
+        assert 'id="mod-thread"' in split_row_snippet
+        assert 'inspector-split-divider' in split_row_snippet
+
+        # CSS verification for split row, divider, and responsive collapse
+        assert "inspector-split-row" in css
+        assert "inspector-split-col" in css
+        assert "inspector-split-divider" in css
+
+        # 10. Permanent Case Closure full-width directly below the two-column split row
+        assert 'id="mod-close-section"' in html
+        assert "mod-close-section" in css
+
+        # 11. End-to-end API lifecycle validation
+        # Create a report and verify moderator access
+        create_res = await client.post("/api/v1/reports", json={
+            "category": "SECURITY",
+            "description": "Inspector split layout triage test report"
+        })
+        assert create_res.status_code == 201
+        report_data = create_res.json()
+        case_code = report_data["case_code"]
+
+        mod_res = await client.get("/api/v1/moderator/reports", headers=auth_headers)
+        assert mod_res.status_code == 200
+        reports = mod_res.json()
+        matched = [r for r in reports if r["description"] == "Inspector split layout triage test report"]
+        assert len(matched) == 1
+        rep_id = matched[0]["id"]
+
+        detail_res = await client.get(f"/api/v1/moderator/reports/{rep_id}", headers=auth_headers)
+        assert detail_res.status_code == 200
+        detail = detail_res.json()
+        assert detail["id"] == rep_id
+        assert detail["status"] == "SUBMITTED"
+
 
 
 
