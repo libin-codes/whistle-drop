@@ -5,6 +5,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import StaticPool, create_engine
 from sqlalchemy.orm import sessionmaker
 
+from app.auth import seed_default_moderator
 from app.database import Base, get_db
 from app.main import app
 from app.rate_limit import tracking_limiter
@@ -21,6 +22,7 @@ def db_session():
     Base.metadata.create_all(bind=engine)
     TestSession = sessionmaker(bind=engine)
     session = TestSession()
+    seed_default_moderator(session)
     try:
         yield session
     finally:
@@ -52,3 +54,23 @@ async def client(db_session, tmp_path, monkeypatch):
         yield c
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+async def auth_token(client):
+    """Fixture that logs in as default moderator and yields the Bearer token."""
+    from app.auth import DEFAULT_MODERATOR_PASSWORD, DEFAULT_MODERATOR_USERNAME
+
+    resp = await client.post(
+        "/api/v1/auth/login",
+        json={"username": DEFAULT_MODERATOR_USERNAME, "password": DEFAULT_MODERATOR_PASSWORD},
+    )
+    assert resp.status_code == 200
+    return resp.json()["access_token"]
+
+
+@pytest.fixture()
+def auth_headers(auth_token):
+    """Fixture providing Authorization header with valid Bearer token."""
+    return {"Authorization": f"Bearer {auth_token}"}
+

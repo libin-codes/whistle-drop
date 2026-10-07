@@ -48,6 +48,7 @@ class ReportStatus(BaseModel):
     category: str
     status: str
     status_note: str | None = None
+    status_update: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -59,3 +60,34 @@ class EvidenceUploaded(BaseModel):
 
 class ErrorDetail(BaseModel):
     detail: str
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int = 86400
+
+
+class ModeratorReportResponse(BaseModel):
+    """Report representation for authorized moderators — no reporter identifiers."""
+
+    id: int
+    category: str
+    description: str
+    evidence_url: str | None = None
+    status: str
+    status_note: str | None = None
+    status_update: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ReportStatusUpdate(BaseModel):
+    status: str
+    status_update: str | None = None
+    status_note: str | None = None
