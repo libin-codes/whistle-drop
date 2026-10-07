@@ -18,15 +18,17 @@
                 <p>Confidential, zero-knowledge anonymous reporting & secure dead drop communication.</p>
             </div>
             <div class="header-actions">
-                <!-- Unauthenticated State: Outline Moderator Login button -->
-                <div id="unauth-header-actions">
+                <!-- Unauthenticated State: Outline Moderator Login button with Whistleblower Badge -->
+                <div id="unauth-header-actions" class="header-persona-group">
+                    <span class="persona-badge" id="persona-badge-public">Whistleblower</span>
                     <button type="button" class="btn btn-outline" id="btn-open-mod-login" onclick="openLoginModal()" aria-haspopup="dialog">
                         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
                         Moderator Login
                     </button>
                 </div>
-                <!-- Authenticated State: Styled Outline Logout Button -->
-                <div id="auth-header-actions" class="header-auth-controls hidden">
+                <!-- Authenticated State: Styled Outline Logout Button with Moderator Badge -->
+                <div id="auth-header-actions" class="header-auth-controls header-persona-group hidden">
+                    <span class="persona-badge persona-badge-mod" id="persona-badge-mod">Moderator</span>
                     <button type="button" class="btn btn-outline" id="btn-mod-logout" onclick="modLogout()" title="Log out of Moderator Portal">
                         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                         Logout
@@ -50,16 +52,20 @@
     <!-- TAB 1: SUBMIT REPORT -->
     <div id="tab-submit" class="tab-content active" role="tabpanel" aria-labelledby="tab-btn-submit">
         <div class="card" id="submit-card">
-            <div class="card-header-row">
-                <div>
-                    <h2>Submit an Anonymous Report</h2>
-                    <p class="card-subtitle">
-                        Your report is protected by zero-knowledge case code hashing (ADR-0001). No IP addresses or identifying device metadata are ever recorded.
-                    </p>
-                </div>
-            </div>
-
             <form id="submit-form" onsubmit="submitReport(event)">
+                <div class="card-header-row">
+                    <div>
+                        <h2>Submit an Anonymous Report</h2>
+                        <p class="card-subtitle">
+                            Your report is protected by zero-knowledge case code hashing (ADR-0001). No IP addresses or identifying device metadata are ever recorded.
+                        </p>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-submit-report" id="btn-submit">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Submit Report Securely
+                    </button>
+                </div>
+
                 <div class="submit-grid">
                     <div class="submit-col">
                         <div class="form-group">
@@ -111,12 +117,6 @@
                     </div>
                 </div>
 
-                <div class="submit-actions-row">
-                    <button type="submit" class="btn btn-primary btn-submit-report" id="btn-submit">
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        Submit Report Securely
-                    </button>
-                </div>
                 <div id="submit-error" class="error-message hidden" style="margin-top: 12px;"></div>
             </form>
         </div>
@@ -247,7 +247,6 @@
                             <h2>Triage Reports Queue</h2>
                             <span id="mod-queue-count" class="badge">0</span>
                         </div>
-                        <span id="mod-current-user" class="mod-user-indicator"></span>
                     </div>
                     <div class="triage-pane-actions">
                         <button type="button" class="btn btn-outline btn-sm" id="btn-mod-refresh" onclick="fetchModReports()" title="Refresh Queue">

@@ -485,27 +485,70 @@ function renderThread(containerId, messages) {
         return;
     }
 
+    let lastDateKey = null;
+
     messages.forEach(msg => {
+        // WhatsApp-style centered calendar date separator
+        if (msg.created_at) {
+            const msgDate = new Date(msg.created_at);
+            const dateKey = msgDate.toDateString();
+            if (dateKey !== lastDateKey) {
+                lastDateKey = dateKey;
+                const dateSep = document.createElement('div');
+                dateSep.className = 'msg-date-separator';
+
+                const today = new Date();
+                const yesterday = new Date();
+                yesterday.setDate(today.getDate() - 1);
+
+                let label = '';
+                if (msgDate.toDateString() === today.toDateString()) {
+                    label = 'Today';
+                } else if (msgDate.toDateString() === yesterday.toDateString()) {
+                    label = 'Yesterday';
+                } else {
+                    label = msgDate.toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                }
+
+                dateSep.innerHTML = `<span class="msg-date-chip">${escapeHtml(label)}</span>`;
+                container.appendChild(dateSep);
+            }
+        }
+
         const div = document.createElement('div');
         const isMod = (msg.sender_role || '').toUpperCase() === 'MODERATOR';
         div.className = 'msg ' + (isMod ? 'msg-moderator' : 'msg-reporter');
 
         const meta = document.createElement('div');
         meta.className = 'msg-meta';
-        const dateStr = msg.created_at ? new Date(msg.created_at).toLocaleString() : '';
         const roleIcon = isMod ? getIcon('shield', 'icon icon-xs') : getIcon('user', 'icon icon-xs');
         const roleLabel = containerId === 'mod-thread'
             ? (isMod ? 'Moderator (You)' : 'Whistleblower')
             : (isMod ? 'Moderator' : 'Whistleblower (You)');
-        meta.innerHTML = `${roleIcon} <span class="msg-author">${roleLabel}</span>${dateStr ? ' • <span class="msg-date">' + dateStr + '</span>' : ''}`;
+        meta.innerHTML = `${roleIcon} <span class="msg-author">${roleLabel}</span>`;
 
         const content = document.createElement('div');
         content.className = 'msg-content';
         content.style.whiteSpace = 'pre-wrap';
         content.textContent = msg.content || msg.message || '';
 
+        // WhatsApp-style bottom-right timestamp without seconds in 12-hour format
+        const footer = document.createElement('div');
+        footer.className = 'msg-footer';
+        let timeStr = '';
+        if (msg.created_at) {
+            const d = new Date(msg.created_at);
+            timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+        footer.innerHTML = `<span class="msg-time">${escapeHtml(timeStr)}</span>`;
+
         div.appendChild(meta);
         div.appendChild(content);
+        div.appendChild(footer);
         container.appendChild(div);
     });
 
@@ -763,9 +806,9 @@ async function modLogin(e) {
         const data = await res.json();
         modToken = data.access_token;
 
-        // Update username display in triage workspace
+        // Clear any old username display in triage workspace
         const currentUser = document.getElementById('mod-current-user');
-        if (currentUser) currentUser.textContent = 'Logged in as: ' + username;
+        if (currentUser) currentUser.textContent = '';
 
         // Close login dialog modal
         closeLoginModal();

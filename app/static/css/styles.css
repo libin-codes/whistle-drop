@@ -138,6 +138,33 @@ body {
     flex-wrap: wrap;
 }
 
+.header-persona-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.persona-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+    border-radius: 9999px;
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+    border: 1px solid var(--border);
+    letter-spacing: 0.02em;
+    user-select: none;
+}
+
+.persona-badge-mod {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
 /* Segmented Control / Navigation Toggle */
 .segmented-control {
     display: inline-flex;
@@ -1514,6 +1541,42 @@ textarea {
 .msg-content {
     color: var(--foreground);
     word-break: break-word;
+}
+
+/* WhatsApp-Style Dead Drop Date Separator & Bubble Footer */
+.msg-date-separator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 14px 0 8px 0;
+    width: 100%;
+}
+
+.msg-date-chip {
+    background-color: rgba(39, 39, 42, 0.95);
+    color: var(--muted-foreground);
+    border: 1px solid var(--border);
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 3px 12px;
+    border-radius: 9999px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    user-select: none;
+    letter-spacing: 0.01em;
+}
+
+.msg-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 4px;
+    line-height: 1;
+}
+
+.msg-time {
+    font-size: 0.6875rem;
+    color: var(--muted-foreground);
+    opacity: 0.85;
 }
 
 /* Frozen Thread Notice (ADR-0002) */

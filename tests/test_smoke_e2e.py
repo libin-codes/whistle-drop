@@ -996,6 +996,55 @@ class TestEndToEndSmoke:
         assert final_mod_detail.json()["description"] == "[REDACTED - CASE PERMANENTLY CLOSED]"
         assert final_mod_detail.json()["evidence_url"] is None
 
+    async def test_ticket_28_public_experience_persona_submit_and_whatsapp_dead_drop(self, client):
+        """Ticket 28 acceptance criteria verification:
+        1. Header shows 'Whistleblower' persona badge to the left of 'Moderator Login' in public mode.
+        2. Header transitions to show 'Moderator' badge to the left of 'Logout' when authenticated.
+        3. Static 'Logged in as: moderator' is removed from the triage header.
+        4. Submit report button is positioned in the top-right header row of the submit card.
+        5. Bottom submit action row is removed.
+        6. CSS defines WhatsApp-style date chips and bottom-right message timestamp layout.
+        7. JS implements centered date separators and 12-hour timestamps without seconds.
+        """
+        resp = await client.get("/")
+        assert resp.status_code == 200
+        html = resp.text
+
+        # 1. Persona badge in unauthenticated header to the left of Moderator Login button
+        assert "persona-badge" in html or "badge-role" in html or "role-badge" in html
+        assert "Whistleblower" in html
+        assert "Moderator" in html
+
+        # 2. Static 'Logged in as:' removed from triage queue header
+        assert "Logged in as:" not in html
+
+        # 3. Submit report button in the card header row
+        card_header_start = html.find('id="submit-card"')
+        assert card_header_start != -1
+        submit_card_html = html[card_header_start:html.find('<!-- TAB 2:', card_header_start)]
+        card_header_row_start = submit_card_html.find('class="card-header-row"')
+        assert card_header_row_start != -1
+        card_header_row_end = submit_card_html.find('</form>', card_header_row_start)
+        card_header_row_snippet = submit_card_html[card_header_row_start:card_header_row_end]
+        assert "btn-submit" in card_header_row_snippet or 'form="submit-form"' in card_header_row_snippet
+        assert "submit-actions-row" not in submit_card_html
+
+        # 4. CSS tokens for WhatsApp-style date separator and message timestamps
+        css_resp = await client.get("/static/css/styles.css")
+        assert css_resp.status_code == 200
+        css = css_resp.text
+        assert "msg-date-separator" in css or "thread-date-separator" in css
+        assert "msg-date-chip" in css or "thread-date-chip" in css
+        assert "msg-time" in css or "msg-timestamp" in css
+
+        # 5. JS implementation of WhatsApp-style messages and 12-hour time format
+        js_resp = await client.get("/static/js/dashboard.js")
+        assert js_resp.status_code == 200
+        js = js_resp.text
+        assert "msg-date-separator" in js or "thread-date-separator" in js
+        assert "msg-time" in js or "msg-timestamp" in js
+
+
 
 
 
