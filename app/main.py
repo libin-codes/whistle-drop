@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.auth import seed_default_moderator
-from app.dashboard import DASHBOARD_HTML
+from app.dashboard import DASHBOARD_HTML, get_dashboard_html
 from app.database import Base, SessionLocal, engine
 from app.routes import router
 
@@ -35,7 +35,7 @@ app = FastAPI(
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def dashboard() -> HTMLResponse:
     """Serve the embedded single-page dashboard."""
-    return HTMLResponse(content=DASHBOARD_HTML)
+    return HTMLResponse(content=get_dashboard_html())
 
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"

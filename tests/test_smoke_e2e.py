@@ -237,3 +237,63 @@ class TestEndToEndSmoke:
         reports = resp.json()
         matching = [r for r in reports if r["evidence_url"] == evidence_url]
         assert len(matching) == 1
+
+    async def test_shadcn_design_system_and_iconography(self, client):
+        """Ticket 1 acceptance criteria: pure CSS Zinc tokens, button variants,
+        toasts, dialog overlays, inline SVG icon helpers, and zero CDN links.
+        """
+        # 1. GET / verification
+        resp = await client.get("/")
+        assert resp.status_code == 200
+        html = resp.text
+        assert "<script src=\"http" not in html
+        assert "<link rel=\"stylesheet\" href=\"http" not in html
+        assert "🛡️" in html
+        assert "WhistleDrop" in html
+
+        # 2. CSS custom properties & components verification
+        css_resp = await client.get("/static/css/styles.css")
+        assert css_resp.status_code == 200
+        css = css_resp.text
+
+        # Dark Zinc palette tokens in :root
+        required_tokens = [
+            "--background",
+            "--foreground",
+            "--card",
+            "--border",
+            "--input",
+            "--ring",
+            "--primary",
+            "--muted",
+            "--destructive",
+        ]
+        for token in required_tokens:
+            assert token in css, f"Missing token {token} in styles.css"
+
+        # Reusable component styling for shadcn button variants
+        assert "btn-outline" in css
+        assert "btn-ghost" in css
+        assert "btn-destructive" in css
+
+        # Dialog overlay and modal container primitives
+        assert "dialog-overlay" in css or "modal-overlay" in css
+        assert "dialog-content" in css or "modal-card" in css
+
+        # Toast styling
+        assert "toast-container" in css
+        assert ".toast" in css
+
+        # Icon styling
+        assert ".icon" in css or ".lucide" in css
+
+        # 3. JavaScript SVG icon helpers verification
+        js_resp = await client.get("/static/js/dashboard.js")
+        assert js_resp.status_code == 200
+        js = js_resp.text
+
+        assert "getIcon" in js
+        # Verify Lucide-style SVG icons are defined
+        for icon_name in ["shield", "lock", "search", "copy", "fileText", "alertTriangle"]:
+            assert icon_name in js, f"Missing icon {icon_name} in dashboard.js"
+
