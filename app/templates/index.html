@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛡️ WhistleDrop — Confidential Reporting</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+<div class="container">
+    <div class="header">
+        <h1>🛡️ WhistleDrop</h1>
+        <p>Confidential, zero-knowledge anonymous reporting & secure dead drop communication.</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-btn-submit" onclick="switchTab('submit')">🔒 Submit Report</button>
+        <button class="tab-btn" id="tab-btn-track" onclick="switchTab('track')">🔍 Track Report</button>
+        <button class="tab-btn" id="tab-btn-mod" onclick="switchTab('mod')">🛡️ Moderator Portal</button>
+    </div>
+
+    <!-- TAB 1: SUBMIT REPORT -->
+    <div id="tab-submit" class="tab-content active">
+        <div class="card" id="submit-card">
+            <h2>Submit an Anonymous Report</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+                Your report is encrypted and protected by zero-knowledge case code hashing. No IP addresses or identifying device metadata are ever recorded.
+            </p>
+            <form id="submit-form" onsubmit="submitReport(event)">
+                <div class="form-group">
+                    <label for="submit-category">Issue Category</label>
+                    <select id="submit-category" required>
+                        <option value="SECURITY">Security — Vulnerability, credential leak, data breach</option>
+                        <option value="HARASSMENT">Harassment — Workplace abuse, misconduct, discrimination</option>
+                        <option value="CORRUPTION">Corruption — Bribery, embezzlement, fraud, kickbacks</option>
+                        <option value="TECHNICAL">Technical — Safety defect, system sabotage, negligence</option>
+                        <option value="OTHER">Other — General confidential concern</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="submit-desc">Report Description</label>
+                    <textarea id="submit-desc" required placeholder="Provide all relevant details anonymously. Avoid including your own identifying details..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="submit-evidence">Image Evidence (Optional, max 5 MB)</label>
+                    <input type="file" id="submit-evidence" accept="image/jpeg,image/png,image/webp">
+                    <small style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 4px;">
+                        All camera EXIF, GPS coordinates, and device timestamps are stripped in-memory before storage.
+                    </small>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btn-submit">
+                    Submit Report Securely
+                </button>
+                <div id="submit-error" class="error-message hidden"></div>
+            </form>
+        </div>
+
+        <div class="card hidden" id="success-card">
+            <h2 style="color: var(--accent-green);">✓ Report Submitted Securely</h2>
+            <p style="color: var(--text-color);">
+                Your report has been received and assigned a cryptographically random, zero-knowledge Case Code:
+            </p>
+
+            <div class="case-code-box">
+                <div style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Your Secret Case Code</div>
+                <div class="case-code" id="success-case-code">WD-XXXX-XXXX</div>
+                <button class="btn btn-blue" id="btn-copy-code" onclick="copyCaseCode()">📋 Copy Case Code</button>
+            </div>
+
+            <div class="warning-box">
+                <strong>CRITICAL:</strong> Save this Case Code immediately. WhistleDrop stores only a one-way SHA-256 hash.
+                This plaintext code is <strong>NEVER shown again and cannot be recovered</strong> by anyone, including system administrators.
+            </div>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+                <button class="btn btn-primary" id="btn-track-submitted-case" onclick="trackCaseFromSuccess()">🔍 Track This Case Now</button>
+                <button class="btn" onclick="resetSubmit()">Submit Another Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: TRACK REPORT -->
+    <div id="tab-track" class="tab-content">
+        <div class="card" id="track-search-card">
+            <h2>Track Anonymous Report</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+                Enter your Case Code to check investigation status and access the bidirectional Dead Drop communication thread.
+            </p>
+            <form id="track-form" onsubmit="trackReport(event)">
+                <div class="form-group">
+                    <label for="track-code">Case Code</label>
+                    <input type="text" id="track-code" required placeholder="e.g. WD-ABCD-1234" autocomplete="off" spellcheck="false">
+                </div>
+                <button type="submit" class="btn btn-primary" id="btn-track">Track Case</button>
+                <div id="track-error" class="error-message hidden"></div>
+            </form>
+        </div>
+
+        <div class="card hidden" id="track-result-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+                <div>
+                    <h2>Case Status: <span id="track-status" class="badge"></span></h2>
+                    <span id="track-category" class="cat-badge mt-2"></span>
+                </div>
+                <button class="btn" onclick="resetTrack()">← Search Another Case</button>
+            </div>
+
+            <div id="track-note-container" class="hidden" style="margin-bottom: 16px; padding: 12px; background: rgba(35, 134, 54, 0.1); border-left: 3px solid var(--accent-green); border-radius: 4px;">
+                <strong style="color: #3fb950; font-size: 0.85rem; text-transform: uppercase;">Moderator Status Update:</strong>
+                <div id="track-note" style="margin-top: 6px; color: var(--text-color); font-size: 0.95rem;"></div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h4>Dead Drop Message Thread</h4>
+                <div class="thread-container" id="track-thread">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <form id="track-reply-form" onsubmit="sendTrackReply(event)">
+                    <div class="form-group">
+                        <label for="track-reply-text">Post Confidential Reply</label>
+                        <textarea id="track-reply-text" required placeholder="Send an anonymous message to the reviewing moderator..." style="min-height: 80px;"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btn-track-reply">Send Reply</button>
+                    <div id="track-reply-error" class="error-message hidden"></div>
+                </form>
+                <div id="track-closed-notice" class="hidden warning-box" style="margin-top: 12px;">
+                    This case is <strong>permanently closed</strong>. The Dead Drop thread has been permanently frozen against new replies (ADR-0002).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: MODERATOR PORTAL -->
+    <div id="tab-mod" class="tab-content">
+        <!-- Login Card -->
+        <div class="card" id="mod-login-card">
+            <h2>Moderator Portal Login</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+                Authorized personnel only. Issues 24-hour HS256 JWT access token.
+            </p>
+            <form id="mod-login-form" onsubmit="modLogin(event)">
+                <div class="form-group">
+                    <label for="mod-user">Username</label>
+                    <input type="text" id="mod-user" required autocomplete="username" value="moderator">
+                </div>
+                <div class="form-group">
+                    <label for="mod-pass">Password</label>
+                    <input type="password" id="mod-pass" required autocomplete="current-password" value="moderator123">
+                </div>
+                <button type="submit" class="btn btn-primary" id="btn-mod-login">Login to Portal</button>
+                <div id="mod-login-error" class="error-message hidden"></div>
+            </form>
+        </div>
+
+        <!-- Authenticated Dashboard -->
+        <div id="mod-dashboard" class="hidden">
+            <!-- List View -->
+            <div class="card" id="mod-list-view">
+                <div class="mod-header">
+                    <div>
+                        <h2>Triage Queue</h2>
+                        <span id="mod-current-user" style="font-size: 0.85rem; color: var(--text-muted);"></span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn" onclick="fetchModReports()">↻ Refresh</button>
+                        <button class="btn btn-danger" onclick="modLogout()">Logout</button>
+                    </div>
+                </div>
+
+                <div class="filters" style="margin-bottom: 16px;">
+                    <select id="mod-filter-status" onchange="fetchModReports()">
+                        <option value="">All Statuses</option>
+                        <option value="SUBMITTED">Submitted</option>
+                        <option value="UNDER_REVIEW">Under Review</option>
+                        <option value="RESOLVED">Resolved</option>
+                        <option value="DISMISSED">Dismissed</option>
+                        <option value="PERMANENTLY_CLOSED">Permanently Closed</option>
+                    </select>
+
+                    <select id="mod-filter-category" onchange="fetchModReports()">
+                        <option value="">All Categories</option>
+                        <option value="SECURITY">Security</option>
+                        <option value="HARASSMENT">Harassment</option>
+                        <option value="CORRUPTION">Corruption</option>
+                        <option value="TECHNICAL">Technical</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+
+                <ul class="report-list" id="mod-report-list">
+                    <!-- Populated dynamically -->
+                </ul>
+                <div id="mod-list-error" class="error-message hidden"></div>
+            </div>
+
+            <!-- Detail View -->
+            <div class="card hidden" id="mod-detail-view">
+                <div class="mod-header">
+                    <div>
+                        <h2 id="mod-detail-heading">Report Details</h2>
+                        <span id="mod-det-cat" class="cat-badge"></span>
+                        <span id="mod-det-status" class="badge"></span>
+                    </div>
+                    <button class="btn" onclick="closeModDetail()">← Back to Queue</button>
+                </div>
+
+                <div class="detail-grid">
+                    <div>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Report ID</span>
+                        <div id="mod-det-id" style="font-weight: 600;"></div>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Submitted At</span>
+                        <div id="mod-det-created" style="font-size: 0.9rem;"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <div id="mod-det-desc" style="white-space: pre-wrap; background: var(--bg-color); padding: 12px; border-radius: var(--border-radius); border: 1px solid var(--border-color); font-size: 0.95rem;"></div>
+                </div>
+
+                <div id="mod-det-evidence-container" class="form-group hidden">
+                    <label>Scrubbed Evidence File</label>
+                    <a id="mod-det-evidence" href="#" target="_blank" class="btn" style="color: #58a6ff;">🔍 View Scrubbed Image</a>
+                </div>
+
+                <!-- Status Workflow Actions -->
+                <div id="mod-workflow-section" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                    <h4>Status Workflow Transition</h4>
+                    <div class="form-group">
+                        <label for="mod-status-note">Public Status Update Note (Visible to Whistleblower)</label>
+                        <input type="text" id="mod-status-note" placeholder="e.g. Assigned to senior investigator.">
+                    </div>
+                    <div class="action-buttons" id="mod-status-actions">
+                        <!-- Transition buttons dynamically rendered based on allowed state transitions -->
+                    </div>
+                    <div id="mod-status-error" class="error-message hidden"></div>
+                </div>
+
+                <!-- Dead Drop Section -->
+                <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                    <h4>Dead Drop Thread</h4>
+                    <div class="thread-container" id="mod-thread">
+                        <!-- Messages populated dynamically -->
+                    </div>
+
+                    <form id="mod-reply-form" onsubmit="sendModReply(event)">
+                        <div class="form-group">
+                            <label for="mod-reply-text">Post Moderator Message</label>
+                            <textarea id="mod-reply-text" required placeholder="Send inquiry or guidance to the whistleblower..." style="min-height: 80px;"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btn-mod-reply">Send Dead Drop Message</button>
+                        <div id="mod-reply-error" class="error-message hidden"></div>
+                    </form>
+                    <div id="mod-thread-frozen-notice" class="hidden warning-box">
+                        This report is permanently closed. Message posting is permanently disabled.
+                    </div>
+                </div>
+
+                <!-- Permanent Closure Section (ADR-0002) -->
+                <div id="mod-close-section" style="margin-top: 32px; padding: 16px; border: 1px solid rgba(218, 54, 51, 0.4); border-radius: var(--border-radius); background: rgba(218, 54, 51, 0.05);">
+                    <h4 style="color: #f85149;">Permanent Case Closure & Data Minimization (ADR-0002)</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                        Permanently close this report. This action is irreversible: it immediately overwrites the description with the standardized Redaction Marker, physically shreds all evidence files from disk, and freezes the Dead Drop thread against all future writes.
+                    </p>
+                    <div class="form-group">
+                        <input type="text" id="mod-close-reason" placeholder="Optional closing resolution note...">
+                    </div>
+                    <button class="btn btn-danger" id="btn-mod-close" onclick="triggerPermanentClosure()">⚠️ Irreversibly Close Case</button>
+                    <div id="mod-close-error" class="error-message hidden"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

@@ -153,6 +153,19 @@ class TestEndToEndSmoke:
         assert "mod-filter-category" in content
         assert "triggerPermanentClosure" in content
 
+        # Static assets
+        assert "/static/css/styles.css" in content
+        assert "/static/js/dashboard.js" in content
+        assert "toast-container" in content
+
+        css_resp = await client.get("/static/css/styles.css")
+        assert css_resp.status_code == 200
+        assert "toast-container" in css_resp.text
+
+        js_resp = await client.get("/static/js/dashboard.js")
+        assert js_resp.status_code == 200
+        assert "showToast" in js_resp.text
+
     async def test_openapi_docs_available(self, client):
         """GET /docs serves interactive OpenAPI documentation."""
         resp = await client.get("/docs")
