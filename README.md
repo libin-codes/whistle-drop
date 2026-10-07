@@ -25,7 +25,7 @@
 <!-- HERO DEMO VIDEO PLACEHOLDER -->
 <div align="center">
 
-[![WhistleDrop Demo Walkthrough](https://placehold.co/1200x560/0f172a/94a3b8?text=▶+WhistleDrop+Video+Walkthrough+(1min+30s+Demo))](docs/assets/demo.mp4)
+https://github.com/user-attachments/assets/a7a13480-5399-43e3-9e5a-3a31e2cb3aaa
 
 *🎥 **Interactive Product Tour**: Anonymous submission, zero-knowledge lookup, moderator split-view triage, and ADR-0002 permanent case closure.*
 
