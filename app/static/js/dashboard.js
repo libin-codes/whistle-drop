@@ -435,7 +435,11 @@ function setBtnLoading(btnId, isLoading, originalText) {
     if (!btn) return;
     btn.disabled = isLoading;
     if (isLoading) {
-        btn.innerHTML = '<span class="spinner"></span> Processing...';
+        if (btn.classList.contains('btn-icon')) {
+            btn.innerHTML = '<span class="spinner" style="margin: 0; width: 14px; height: 14px;"></span>';
+        } else {
+            btn.innerHTML = '<span class="spinner"></span> Processing...';
+        }
     } else {
         btn.innerHTML = originalText;
     }
@@ -672,8 +676,9 @@ async function sendTrackReply(e) {
     const content = textInput.value.trim();
     if (!content) return;
 
+    const sendIcon = getIcon('send', 'icon icon-sm');
     clearError('track-reply-error');
-    setBtnLoading('btn-track-reply', true, 'Send Reply');
+    setBtnLoading('btn-track-reply', true, sendIcon);
 
     try {
         const res = await fetch('/api/v1/reports/track/' + encodeURIComponent(currentTrackCode) + '/messages', {
@@ -694,7 +699,7 @@ async function sendTrackReply(e) {
     } catch (err) {
         showError('track-reply-error', err.message);
     } finally {
-        setBtnLoading('btn-track-reply', false, 'Send Reply');
+        setBtnLoading('btn-track-reply', false, sendIcon);
     }
 }
 
@@ -1041,8 +1046,9 @@ async function sendModReply(e) {
     const content = textInput ? textInput.value.trim() : '';
     if (!content) return;
 
+    const sendIcon = getIcon('send', 'icon icon-sm');
     clearError('mod-reply-error');
-    setBtnLoading('btn-mod-reply', true, 'Sending...');
+    setBtnLoading('btn-mod-reply', true, sendIcon);
 
     try {
         const res = await fetch('/api/v1/moderator/reports/' + currentModReportId + '/messages', {
@@ -1067,7 +1073,7 @@ async function sendModReply(e) {
     } catch (err) {
         showError('mod-reply-error', err.message);
     } finally {
-        setBtnLoading('btn-mod-reply', false, 'Send Dead Drop Message');
+        setBtnLoading('btn-mod-reply', false, sendIcon);
     }
 }
 

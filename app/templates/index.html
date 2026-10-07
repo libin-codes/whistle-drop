@@ -220,7 +220,7 @@
                 </div>
                 <button type="button" class="btn btn-outline btn-sm" onclick="resetTrack()">
                     <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-                    Search Another Case
+                    Back
                 </button>
             </div>
 
@@ -263,24 +263,21 @@
                         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                         <h4>Dead Drop Message Thread</h4>
                     </div>
-                    <div class="thread-badge">Confidential & Asynchronous</div>
                 </div>
 
-                <div class="thread-container" id="track-thread">
-                    <!-- Populated dynamically -->
-                </div>
-
-                <form id="track-reply-form" onsubmit="sendTrackReply(event)">
-                    <div class="form-group">
-                        <label for="track-reply-text">Post Confidential Reply</label>
-                        <textarea id="track-reply-text" required placeholder="Send an anonymous confidential reply to the reviewing moderator..." style="min-height: 80px;"></textarea>
+                <div class="thread-box">
+                    <div class="thread-container" id="track-thread">
+                        <!-- Populated dynamically -->
                     </div>
-                    <button type="submit" class="btn btn-primary" id="btn-track-reply">
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                        Send Reply
-                    </button>
-                    <div id="track-reply-error" class="error-message hidden"></div>
-                </form>
+
+                    <form id="track-reply-form" class="thread-reply-bar" onsubmit="sendTrackReply(event)">
+                        <input type="text" id="track-reply-text" required placeholder="Type an anonymous confidential reply..." autocomplete="off" class="thread-reply-input">
+                        <button type="submit" class="btn btn-primary btn-icon" id="btn-track-reply" title="Send Reply" aria-label="Send confidential reply">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                        </button>
+                    </form>
+                    <div id="track-reply-error" class="error-message hidden" style="padding: 0 12px 8px 12px;"></div>
+                </div>
 
                 <div id="track-closed-notice" class="hidden warning-box frozen-thread-notice">
                     <div class="frozen-notice-header">
@@ -423,24 +420,21 @@
                                 <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                 <h4>Dead Drop Message Thread</h4>
                             </div>
-                            <div class="thread-badge">Confidential & Asynchronous</div>
                         </div>
 
-                        <div class="thread-container" id="mod-thread">
-                            <!-- Messages populated dynamically -->
-                        </div>
-
-                        <form id="mod-reply-form" onsubmit="sendModReply(event)">
-                            <div class="form-group">
-                                <label for="mod-reply-text">Post Moderator Message</label>
-                                <textarea id="mod-reply-text" required placeholder="Send inquiry or guidance to the whistleblower..." style="min-height: 80px;"></textarea>
+                        <div class="thread-box">
+                            <div class="thread-container" id="mod-thread">
+                                <!-- Messages populated dynamically -->
                             </div>
-                            <button type="submit" class="btn btn-primary" id="btn-mod-reply">
-                                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                                Send Dead Drop Message
-                            </button>
-                            <div id="mod-reply-error" class="error-message hidden"></div>
-                        </form>
+
+                            <form id="mod-reply-form" class="thread-reply-bar" onsubmit="sendModReply(event)">
+                                <input type="text" id="mod-reply-text" required placeholder="Type inquiry or guidance to whistleblower..." autocomplete="off" class="thread-reply-input">
+                                <button type="submit" class="btn btn-primary btn-icon" id="btn-mod-reply" title="Send Message" aria-label="Send dead drop message">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                                </button>
+                            </form>
+                            <div id="mod-reply-error" class="error-message hidden" style="padding: 0 12px 8px 12px;"></div>
+                        </div>
 
                         <div id="mod-thread-frozen-notice" class="hidden warning-box frozen-thread-notice">
                             <div class="frozen-notice-header">

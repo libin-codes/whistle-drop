@@ -1350,17 +1350,70 @@ textarea {
     line-height: 1.4;
 }
 
-.thread-container {
-    max-height: 380px;
-    overflow-y: auto;
+/* Dead Drop Chat Container & Sticky Input Bar */
+.thread-box {
+    display: flex;
+    flex-direction: column;
+    height: 340px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
+    background-color: var(--background);
+    overflow: hidden;
+    position: relative;
+}
+
+.thread-container {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     padding: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-    background: var(--background);
+    background: transparent;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    border: none;
+    margin-bottom: 0;
+}
+
+.thread-reply-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: var(--card);
+    border-top: 1px solid var(--border);
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+}
+
+.thread-reply-input {
+    flex: 1;
+    background-color: var(--input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--foreground);
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.thread-reply-input:focus {
+    outline: none;
+    border-color: var(--ring);
+    box-shadow: 0 0 0 1px var(--ring);
+}
+
+.thread-reply-bar .btn-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    flex-shrink: 0;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .msg {

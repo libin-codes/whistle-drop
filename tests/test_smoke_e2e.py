@@ -431,13 +431,17 @@ class TestEndToEndSmoke:
         assert 'id="track-stepper"' in html
         assert 'id="track-note-container"' in html
         assert 'id="track-note"' in html
+        assert "Back" in html
 
-        # 6. Dead Drop message thread components
+        # 6. Dead Drop message thread components (compact sticky chat box, no badge)
         assert 'id="track-thread"' in html
+        assert "thread-box" in html
+        assert "thread-reply-bar" in html
         assert 'id="track-reply-form"' in html
         assert 'id="track-reply-text"' in html
         assert 'id="btn-track-reply"' in html
         assert 'id="track-reply-error"' in html
+        assert "Confidential & Asynchronous" not in html
 
         # 7. Permanent closure frozen notice
         assert 'id="track-closed-notice"' in html
@@ -448,6 +452,8 @@ class TestEndToEndSmoke:
         css_resp = await client.get("/static/css/styles.css")
         assert css_resp.status_code == 200
         css = css_resp.text
+        assert "thread-box" in css
+        assert "thread-reply-bar" in css
         assert "public-tab-control" in css
         assert "dropzone" in css
         assert "dropzone-scrub-badge" in css or "dropzone-scrub-banner" in css or "dropzone-scrub-notice" in css
