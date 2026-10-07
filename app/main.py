@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -36,6 +36,12 @@ app = FastAPI(
 def dashboard() -> HTMLResponse:
     """Serve the embedded single-page dashboard."""
     return HTMLResponse(content=get_dashboard_html())
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon() -> Response:
+    """Handle browser favicon request cleanly with no-content response."""
+    return Response(status_code=204)
 
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
