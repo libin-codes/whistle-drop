@@ -341,26 +341,25 @@
 
                     <!-- Consolidated Overview Card -->
                     <div class="inspector-overview-card" id="mod-overview-card">
-                        <div class="detail-grid detail-grid-3">
-                            <div>
+                        <div class="detail-grid">
+                            <div class="detail-item">
                                 <span class="detail-label">Report ID</span>
                                 <div id="mod-det-id" class="detail-val"></div>
                             </div>
-                            <div>
+                            <div class="detail-item">
                                 <span class="detail-label">Category</span>
                                 <div class="detail-val">
                                     <span id="mod-det-cat" class="cat-badge"></span>
                                 </div>
                             </div>
-                            <div>
+                            <div class="detail-item">
                                 <span class="detail-label">Submitted At</span>
                                 <div id="mod-det-created" class="detail-val"></div>
                             </div>
-                        </div>
-
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <span class="field-label">Report Description</span>
-                            <div id="mod-det-desc" class="mod-description-box"></div>
+                            <div class="detail-item detail-item-desc" style="flex: 1;">
+                                <span class="detail-label">Report Description</span>
+                                <div id="mod-det-desc" class="mod-description-box"></div>
+                            </div>
                         </div>
 
                         <div id="mod-det-evidence-container" class="form-group hidden" style="margin-top: 16px; margin-bottom: 0;">

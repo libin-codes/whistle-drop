@@ -1096,7 +1096,7 @@ class TestEndToEndSmoke:
         assert "triage-search-wrap" in css
         assert "triage-filter-selects" in css
         assert "btn-ghost" in css
-        assert "detail-grid-3" in css
+        assert "detail-item-desc" in css
 
         # 3. Queue table subtle trailing column header and chevron icon
         assert '<th scope="col" class="th-actions"' in html
@@ -1141,7 +1141,7 @@ class TestEndToEndSmoke:
         assert 'id="btn-mod-close-detail"' not in actions_snippet
         assert 'id="mod-det-cat"' not in actions_snippet
 
-        # 7. Single consolidated overview container with 3-column grid including Category badge
+        # 7. Single consolidated overview container with Report Description inside detail-grid occupying flex: 1
         assert 'id="mod-overview-card"' in html or 'class="inspector-overview-card"' in html
         card_start = html.find('id="mod-overview-card"')
         if card_start == -1:
@@ -1150,12 +1150,19 @@ class TestEndToEndSmoke:
         # Overview card must encompass ID, Category badge, Created, Description, and Evidence
         card_end = html.find('id="mod-split-row"', card_start)
         overview_snippet = html[card_start:card_end]
-        assert 'detail-grid-3' in overview_snippet
+        assert 'detail-grid' in overview_snippet
         assert 'id="mod-det-id"' in overview_snippet
         assert 'id="mod-det-cat"' in overview_snippet
         assert 'id="mod-det-created"' in overview_snippet
         assert 'id="mod-det-desc"' in overview_snippet
         assert 'id="mod-det-evidence-container"' in overview_snippet
+
+        # Report Description is inside the detail container occupying flex: 1
+        grid_start = overview_snippet.find('class="detail-grid"')
+        grid_end = overview_snippet.find('id="mod-det-evidence-container"', grid_start)
+        grid_snippet = overview_snippet[grid_start:grid_end]
+        assert 'id="mod-det-desc"' in grid_snippet
+        assert 'flex: 1' in grid_snippet
 
         # 8 & 9. Responsive two-column split row with divider and responsive collapse
         assert 'id="mod-split-row"' in html or 'class="inspector-split-row"' in html
