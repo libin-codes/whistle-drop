@@ -8,16 +8,26 @@
 
 [![Python](https://img.shields.io/badge/Python-3.14+-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Tests](https://img.shields.io/badge/Tests-70%20Passing-brightgreen.svg?logo=pytest&logoColor=white)](#-running-tests)
+[![Tests](https://img.shields.io/badge/Tests-79%20Passing-brightgreen.svg?logo=pytest&logoColor=white)](#-running-tests)
 [![Architecture](https://img.shields.io/badge/Architecture-Zero--Knowledge-purple.svg)](#-threat-model--security-architecture)
 [![Zero Setup](https://img.shields.io/badge/Setup-Zero--Friction%20(uv%20%2B%20SQLite)-orange.svg)](#-quickstart-in-30-seconds)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 [**⚡ 30s Quickstart**](#-quickstart-in-30-seconds) &bull;
 [**🎯 2-Minute Evaluator Tour**](#-2-minute-evaluator-tour) &bull;
-[**✨ Why WhistleDrop?**](#-why-whistle-drop-vs-traditional-systems) &bull;
+[**✨ Key Features**](#-key-features--technical-capabilities) &bull;
+[**🔄 Technical Workflow**](#-end-to-end-technical-workflow) &bull;
 [**🛡️ Security Architecture**](#-threat-model--security-architecture) &bull;
 [**📖 API & Docs**](#-api-reference)
+
+</div>
+
+<!-- HERO DEMO VIDEO PLACEHOLDER -->
+<div align="center">
+
+[![WhistleDrop Demo Walkthrough](https://placehold.co/1200x560/0f172a/94a3b8?text=▶+WhistleDrop+Video+Walkthrough+(1min+30s+Demo))](docs/assets/demo.mp4)
+
+*🎥 **Interactive Product Tour**: Anonymous submission, zero-knowledge lookup, moderator split-view triage, and ADR-0002 permanent case closure.*
 
 </div>
 
@@ -40,7 +50,7 @@ uv run uvicorn app.main:app --reload
 Instant access points:
 * 🖥️ **Embedded Dashboard (Zero-setup UI)**: [http://localhost:8000](http://localhost:8000)
 * 📑 **Interactive Swagger API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-* 🧪 **Run 70 Automated Tests**: `uv run pytest` *(completes in < 3s)*
+* 🧪 **Run 79 Automated Tests**: `uv run pytest` *(completes in < 4s)*
 
 *(Prefer Docker? Run `docker compose up --build` and open [http://localhost:8000](http://localhost:8000))*
 
@@ -48,49 +58,81 @@ Instant access points:
 
 ## 🎯 2-Minute Evaluator Tour
 
-Here is the fastest path to test all core capabilities and security guarantees interactively:
 
-```mermaid
-flowchart LR
-    A["1. Anonymous Submission"] --> B["2. Zero-Knowledge Case Code"]
-    B --> C["3. Moderator Review & Dead Drop"]
-    C --> D["4. Whistleblower Reply"]
-    D --> E["5. Permanent Case Closure (Shred & Redact)"]
-    style A fill:#e0f2fe,stroke:#0284c7,stroke-width:2px
-    style B fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style C fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
-    style D fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-    style E fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-```
+### 1. Submit an Anonymous Report
+* Open [http://localhost:8000](http://localhost:8000).
+* In the **Submit Report** tab, choose a category (e.g. `CORRUPTION`), provide details, and optionally drag-and-drop an image into the evidence dropzone.
+* Click **Submit Report Securely**.
+* In the **Report Submitted Securely** modal, copy your cryptographically random **Case Code** (e.g. `WD-K7M2-X9PL`). *This secret token is revealed only once and never persisted in plaintext.*
 
-1. **Submit an Anonymous Report**:
-   * Open [http://localhost:8000](http://localhost:8000).
-   * In the **Whistleblower Submit** tab, select a category (e.g. `CORRUPTION`), enter a description, and optionally attach an image file.
-   * Click **Submit Anonymous Report**.
-   * Copy the returned cryptographically random **Case Code** (e.g. `WD-K7M2-X9PL`). *This code is returned once and never stored in plaintext.*
 
-2. **Triage as Moderator**:
-   * Switch to the **Moderator Portal** tab.
-   * Log in using default auto-seeded credentials:
-     * **Username:** `moderator`
-     * **Password:** `moderator123`
-   * Select your report, advance the status to `UNDER_REVIEW`, and post a note or inquiry in the **Dead Drop** thread.
 
-3. **Track as Whistleblower**:
-   * Switch to the **Whistleblower Track** tab.
-   * Paste your `Case Code`.
-   * Observe the real-time status update and reply to the moderator's inquiry anonymously through the Dead Drop.
+### 2. Triage as Moderator in the Split Inspector
+* In the top-right header, click **Moderator Login** (next to the Whistleblower persona badge).
+* Log in using default auto-seeded credentials:
+  * **Username:** `moderator`
+  * **Password:** `moderator123`
+* In the **Triage Reports Queue**, test the toolbar search and category/status filter dropdowns.
+* Click your report's row (marked with a trailing chevron) to open the **Report Inspector**:
+  * **Consolidated Overview Card**: Inspect the Report ID, Category badge, Submitted timestamp, description box, and scrubbed evidence preview.
+  * **Status Workflow (Left Column)**: Enter a public status update note (e.g. `"Assigned to senior investigator"`) and click **Move to UNDER_REVIEW**.
+  * **Dead Drop Thread (Right Column)**: Post an inquiry or guidance message to the whistleblower.
 
-4. **Verify Permanent Closure & Data Minimization**:
-   * In the Moderator Portal, click **Permanently Close Case**.
-   * Observe [ADR-0002](docs/adr/0002-permanent-closure-data-minimization.md) in action: the description is irreversibly replaced with `[REDACTED - CASE PERMANENTLY CLOSED]`, the attached evidence file is physically shredded from local disk, and the message thread is frozen against further writes.
 
-5. **Verify the Test Suite**:
-   * In your terminal, run `uv run pytest`. All **70 tests** covering crypto hashing, rate limiting, EXIF stripping, and closure immutability pass immediately.
+
+
+### 3. Track & Reply as Whistleblower
+* Switch to the **Track Report** tab.
+* Paste your `Case Code` and click **Track Case**.
+* Observe the interactive 4-stage **Workflow Stepper**, read the moderator's public status update callout, and send an anonymous reply through the **Dead Drop** message thread.
+
+
+
+### 4. Verify Permanent Closure & Data Minimization (ADR-0002)
+* Return to the Moderator Inspector and scroll to **Permanent Case Closure & Data Minimization**.
+* Click **Irreversibly Close Case** and confirm in the warning dialog modal.
+* Observe [ADR-0002](docs/adr/0002-permanent-closure-data-minimization.md) in action:
+  * The description is irreversibly overwritten with `[REDACTED - CASE PERMANENTLY CLOSED]`.
+  * The attached evidence file is physically shredded and unlinked from disk.
+  * The Dead Drop message thread is permanently frozen against further writes.
+
+
+
+### 5. Verify the Test Suite
+* In your terminal, run `uv run pytest`. All **79 automated tests** covering zero-knowledge hashing, in-memory EXIF scrubbing, rate limiting, and closure immutability pass immediately.
 
 ---
 
-## ✨ Why WhistleDrop vs Traditional Systems?
+## ✨ Key Features & Technical Capabilities
+
+WhistleDrop combines cryptographic privacy, in-memory metadata sanitization, and automated data minimization into a unified, zero-friction reporting platform.
+
+### 🔒 1. Zero-Knowledge Ingestion & Lookups ([ADR-0001](docs/adr/0001-hashed-case-codes.md))
+* **Ephemeral Secret Issuance**: Whistleblowers receive an 8-character cryptographically random Case Code (`WD-XXXX-XXXX`, >41 bits of entropy) revealed exactly once upon submission.
+* **Zero Plaintext Persistence**: The server hashes the code using SHA-256 in-memory and stores solely the cryptographic digest. Even with a full database dump, attackers cannot recover plaintext Case Codes or read reports without the whistleblower's secret token.
+* **Accountless Authentication**: Zero accounts, cookies, sessions, or IP addresses linked to submissions. Possession of the Case Code is the sole authenticator.
+
+### 🧹 2. In-Memory Evidence Sanitization
+* **Pre-Disk EXIF Stripping**: Image uploads (`image/jpeg`, `image/png`, `image/webp`) are buffered directly in memory.
+* **Device & Location Neutralization**: Pillow re-encodes pure pixel data, permanently stripping device serial numbers, camera model data, software signatures, and GPS latitude/longitude coordinates before writing to disk.
+* **UUID Isolation**: Uploaded evidence files are assigned random UUID names on disk to prevent filesystem metadata correlation.
+
+### 📬 3. Bi-Directional Anonymous Dead Drop
+* **Asynchronous Communication**: Enables secure back-and-forth messaging between moderators and whistleblowers without identity linkage.
+* **Zero-Knowledge Whistleblower Access**: The reporter fetches and posts to their private Dead Drop channel simply by providing their plaintext Case Code (hashed on the fly).
+* **Role-Tagged Attribution**: Messages distinguish between `WHISTLEBLOWER` and `MODERATOR` personas without exposing moderator personal identifiers or requiring whistleblower credentials.
+
+### 🚦 4. Deterministic Forward-Only State Machine
+* **Guaranteed Lifecycle**: Case status progresses forward through a strictly controlled state machine (`SUBMITTED` → `UNDER_REVIEW` → `RESOLVED` / `DISMISSED` → `PERMANENTLY_CLOSED`).
+* **No Backtracking or Skip Mutations**: Invalid state jumps or backward transitions are rejected with `HTTP 400 Bad Request`.
+* **Public Status Updates**: Every transition allows moderators to publish status update notes visible to the whistleblower via their tracking stepper.
+
+### 💥 5. Automated Data Minimization on Closure ([ADR-0002](docs/adr/0002-permanent-closure-data-minimization.md))
+* **Irreversible Redaction**: Transitioning to `PERMANENTLY_CLOSED` immediately overwrites the case description with a standardized Redaction Marker: `[REDACTED - CASE PERMANENTLY CLOSED]`.
+* **Physical Evidence Shredding**: Associated evidence files are physically unlinked and removed from disk storage (`os.remove`).
+* **Immutable Thread Lock**: Dead Drop message threads are permanently frozen against subsequent writes, and case status is permanently sealed against future modifications.
+
+### 📊 Capability Matrix: WhistleDrop vs. Traditional Systems
 
 | Capability | Traditional Helpdesks & Forms | WhistleDrop |
 |---|---|---|
@@ -103,6 +145,102 @@ flowchart LR
 | **Setup & Evaluation** | Requires Node, Postgres, Redis, complex configs | **Zero-Friction ([ADR-0003](docs/adr/0003-python-fastapi-stack.md))**. Single command launch via `uv` or Docker with embedded SPA dashboard. |
 
 ---
+
+## 🔄 End-to-End Technical Workflow
+
+The diagram below illustrates the end-to-end data lifecycle across actors, in-memory processing pipelines, and persistence tiers:
+
+```
+┌───────────────┐          ┌───────────────────────┐          ┌─────────────────────┐          ┌───────────────┐
+│ Whistleblower │          │ FastAPI Service (Mem) │          │ Storage (DB / Disk) │          │   Moderator   │
+└───────┬───────┘          └───────────┬───────────┘          └──────────┬──────────┘          └───────┬───────┘
+        │                              │                                 │                             │
+ [PHASE 1: INGESTION & ZERO-KNOWLEDGE GENERATION]                        │                             │
+        │                              │                                 │                             │
+        │ 1. POST /evidence/upload     │                                 │                             │
+        ├─────────────────────────────►│ In-Memory Pillow Re-encode      │                             │
+        │                              │ (Strip EXIF, GPS, Serial)       │                             │
+        │                              ├────────────────────────────────►│ Write /uploads/<uuid>.jpg   │
+        │ 2. POST /reports             │                                 │                             │
+        ├─────────────────────────────►│ Generate Code: WD-K7M2-X9PL     │                             │
+        │                              │ Compute SHA256(Code)            │                             │
+        │                              │ Discard Plain Code from Memory  │                             │
+        │                              ├────────────────────────────────►│ INSERT INTO reports         │
+        │                              │                                 │ (hashed_code, SUBMITTED)    │
+        │◄─────────────────────────────┤                                 │                             │
+        │ Return WD-K7M2-X9PL (once)   │                                 │                             │
+        │                              │                                 │                             │
+ [PHASE 2: TRIAGE & FORWARD STATUS WORKFLOW]                             │                             │
+        │                              │                                 │                             │
+        │                              │                                 │   3. POST /auth/login       │
+        │                              │◄──────────────────────────────────────────────────────────────┤
+        │                              │ Issue JWT (HS256, 24h)          │                             │
+        │                              ├──────────────────────────────────────────────────────────────►│
+        │                              │                                 │   4. GET /moderator/reports │
+        │                              │◄──────────────────────────────────────────────────────────────┤
+        │                              ├────────────────────────────────►│ SELECT * FROM reports       │
+        │                              │ Return triage queue             │                             │
+        │                              ├──────────────────────────────────────────────────────────────►│
+        │                              │                                 │   5. PATCH /reports/{id}    │
+        │                              │◄──────────────────────────────────────────────────────────────┤
+        │                              │ Validate State Transition       │                             │
+        │                              ├────────────────────────────────►│ UPDATE status=UNDER_REVIEW  │
+        │                              │                                 │   6. POST /dead-drop        │
+        │                              │◄──────────────────────────────────────────────────────────────┤
+        │                              ├────────────────────────────────►│ INSERT message (MODERATOR)  │
+        │                              │                                 │                             │
+ [PHASE 3: ZERO-KNOWLEDGE TRACKING & DEAD DROP REPLY]                    │                             │
+        │                              │                                 │                             │
+        │ 7. GET /reports/track/{code} │                                 │                             │
+        ├─────────────────────────────►│ Check Sliding-Window Rate Limit │                             │
+        │                              │ Compute SHA256(code)            │                             │
+        │                              ├────────────────────────────────►│ SELECT WHERE hashed_code    │
+        │◄─────────────────────────────┤ Return status stepper & thread  │                             │
+        │ 8. POST /track/{code}/msg    │                                 │                             │
+        ├─────────────────────────────►│ Compute SHA256(code)            │                             │
+        │                              ├────────────────────────────────►│ INSERT message (REPORTER)   │
+        │◄─────────────────────────────┤ HTTP 201 Created                │                             │
+        │                              │                                 │                             │
+ [PHASE 4: ADR-0002 PERMANENT CLOSURE & DATA MINIMIZATION]               │                             │
+        │                              │                                 │                             │
+        │                              │                                 │   9. POST /reports/{id}/cls │
+        │                              │◄──────────────────────────────────────────────────────────────┤
+        │                              │ Validate Status Machine         │                             │
+        │                              │ Trigger Shredder & Tombstone    │                             │
+        │                              ├────────────────────────────────►│ 10. os.remove(evidence_path)│
+        │                              ├────────────────────────────────►│ 11. description = [REDACTED]│
+        │                              ├────────────────────────────────►│ 12. Lock thread & status    │
+        │                              │ Confirm ADR-0002 Minimization   │                             │
+        │                              ├──────────────────────────────────────────────────────────────►│
+        ▼                              ▼                                 ▼                             ▼
+```
+
+### Technical Lifecycle Breakdown
+
+1. **Phase 1: Ingestion & Ephemeral Token Generation**
+   * Whistleblower submits payload (`POST /api/v1/reports`, optional image `POST /api/v1/evidence/upload`).
+   * Image payload is buffered in-memory; Pillow reconstructs raw pixel data to purge all metadata headers (`EXIF`, `GPS`, `Make`, `Model`, `Software`) before writing with a random UUID name to `/uploads/`.
+   * Server generates a cryptographically random Case Code (`WD-XXXX-XXXX`), computes its SHA-256 digest, and persists solely `Hashed Case Code` to SQLite.
+   * The plaintext Case Code is returned in the HTTP 201 response and immediately discarded from application memory.
+
+2. **Phase 2: Moderator Triage & Forward State Progression**
+   * Moderator authenticates (`POST /api/v1/auth/login`) and receives a 24-hour HS256 JWT bearer token.
+   * Moderator queries the triage queue (`GET /api/v1/moderator/reports`), filtering by category or lifecycle status.
+   * Moderator advances status (`PATCH /api/v1/moderator/reports/{id}/status`) from `SUBMITTED` to `UNDER_REVIEW`, attaching public status updates.
+   * Moderator initiates inquiries via the Dead Drop message thread (`POST /api/v1/moderator/reports/{id}/messages`).
+
+3. **Phase 3: Zero-Knowledge Dead Drop Exchange**
+   * Whistleblower queries `/api/v1/reports/track/{case_code}`.
+   * The sliding-window rate limiter enforces a strict 10 req/min limit per IP to neutralize brute-force key-space sweeps.
+   * Backend computes SHA-256 of the supplied Case Code in-memory, queries SQLite by digest, and returns the case stepper and message history.
+   * Whistleblower posts anonymous follow-ups (`POST /api/v1/reports/track/{case_code}/messages`) authenticated exclusively through Case Code possession.
+
+4. **Phase 4: ADR-0002 Terminal Destruction & Minimization**
+   * Moderator invokes permanent closure (`POST /api/v1/moderator/reports/{id}/close`).
+   * Status transitions to terminal `PERMANENTLY_CLOSED`.
+   * The report's detailed description is irreversibly overwritten in the database with the Redaction Marker (`[REDACTED - CASE PERMANENTLY CLOSED]`).
+   * Attached evidence files on disk are immediately unlinked and removed (`os.remove`).
+   * The Dead Drop thread is frozen; any future writes from either moderator or whistleblower return `HTTP 400 Bad Request`.
 
 ## 🛡️ Threat Model & Security Architecture
 
@@ -272,7 +410,7 @@ curl -X POST http://localhost:8000/api/v1/moderator/reports/1/close \
 
 ## 🧪 Running Tests
 
-The test suite contains **70 automated tests** covering security invariants, state machines, and end-to-end user journeys:
+The test suite contains **79 automated tests** covering security invariants, state machines, and end-to-end user journeys:
 
 ```bash
 uv run pytest
@@ -280,18 +418,18 @@ uv run pytest
 
 Output:
 ```text
-tests/test_auth.py .....                                                 [  7%]
-tests/test_case_closure.py ........                                      [ 18%]
-tests/test_case_codes.py ....                                            [ 24%]
-tests/test_dead_drop.py ......                                           [ 32%]
-tests/test_evidence.py ........                                          [ 44%]
-tests/test_moderator_reports.py ........                                 [ 55%]
-tests/test_reports.py ..........                                         [ 70%]
-tests/test_smoke_e2e.py .....                                            [ 77%]
-tests/test_status_workflow.py ...........                                [ 92%]
+tests/test_auth.py .....                                                 [  6%]
+tests/test_case_closure.py ........                                      [ 16%]
+tests/test_case_codes.py ....                                            [ 21%]
+tests/test_dead_drop.py ......                                           [ 29%]
+tests/test_evidence.py ........                                          [ 39%]
+tests/test_moderator_reports.py ........                                 [ 49%]
+tests/test_reports.py ..........                                         [ 62%]
+tests/test_smoke_e2e.py ..............                                   [ 79%]
+tests/test_status_workflow.py ...........                                [ 93%]
 tests/test_tracking.py .....                                             [100%]
 
-============================== 70 passed in 2.68s ==============================
+============================== 79 passed in 4.03s ==============================
 ```
 
 Test coverage includes:

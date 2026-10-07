@@ -1157,12 +1157,12 @@ class TestEndToEndSmoke:
         assert 'id="mod-det-desc"' in overview_snippet
         assert 'id="mod-det-evidence-container"' in overview_snippet
 
-        # Report Description is inside the detail container occupying flex: 1
+        # Report Description is inside the detail container with detail-item-desc
         grid_start = overview_snippet.find('class="detail-grid"')
         grid_end = overview_snippet.find('id="mod-det-evidence-container"', grid_start)
         grid_snippet = overview_snippet[grid_start:grid_end]
         assert 'id="mod-det-desc"' in grid_snippet
-        assert 'flex: 1' in grid_snippet
+        assert 'detail-item-desc' in grid_snippet
 
         # 8 & 9. Responsive two-column split row with divider and responsive collapse
         assert 'id="mod-split-row"' in html or 'class="inspector-split-row"' in html
