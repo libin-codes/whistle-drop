@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.auth import seed_default_moderator
+from app.dashboard import DASHBOARD_HTML
 from app.database import Base, SessionLocal, engine
 from app.routes import router
 
@@ -27,6 +29,13 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def dashboard() -> HTMLResponse:
+    """Serve the embedded single-page dashboard."""
+    return HTMLResponse(content=DASHBOARD_HTML)
+
 
 app.include_router(router)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
