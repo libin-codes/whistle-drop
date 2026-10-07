@@ -1,0 +1,23 @@
+services:
+  whistledrop:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads:/app/uploads
+      - db-data:/app/data
+    environment:
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-whistledrop-jwt-moderator-secret-key-32b}
+      - MODERATOR_USERNAME=${MODERATOR_USERNAME:-moderator}
+      - MODERATOR_PASSWORD=${MODERATOR_PASSWORD:-moderator123}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  uploads:
+  db-data:
