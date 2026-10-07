@@ -494,7 +494,9 @@ function renderThread(containerId, messages) {
         meta.className = 'msg-meta';
         const dateStr = msg.created_at ? new Date(msg.created_at).toLocaleString() : '';
         const roleIcon = isMod ? getIcon('shield', 'icon icon-xs') : getIcon('user', 'icon icon-xs');
-        const roleLabel = isMod ? 'Moderator' : 'Whistleblower (You)';
+        const roleLabel = containerId === 'mod-thread'
+            ? (isMod ? 'Moderator (You)' : 'Whistleblower')
+            : (isMod ? 'Moderator' : 'Whistleblower (You)');
         meta.innerHTML = `${roleIcon} <span class="msg-author">${roleLabel}</span>${dateStr ? ' • <span class="msg-date">' + dateStr + '</span>' : ''}`;
 
         const content = document.createElement('div');
@@ -969,6 +971,11 @@ async function viewModReport(reportId) {
         if (listView) listView.classList.add('hidden');
         if (detailView) detailView.classList.remove('hidden');
 
+        const emptyEl = document.getElementById('mod-detail-empty');
+        const contentEl = document.getElementById('mod-detail-content');
+        if (emptyEl) emptyEl.classList.add('hidden');
+        if (contentEl) contentEl.classList.remove('hidden');
+
         // Populate Details
         document.getElementById('mod-detail-heading').textContent = 'Report #' + data.id;
         document.getElementById('mod-det-id').textContent = '#' + data.id;
@@ -1042,9 +1049,11 @@ async function viewModReport(reportId) {
         // Render Thread
         renderThread('mod-thread', data.messages);
 
-        // Ensure detail view is visible
+        // Ensure detail view is visible and focus Back button for accessibility
         const detailView = document.getElementById('mod-detail-view');
         if (detailView) detailView.classList.remove('hidden');
+        const backBtn = document.getElementById('btn-mod-back');
+        if (backBtn) backBtn.focus();
 
     } catch (err) {
         console.error('Failed to load report:', err);
