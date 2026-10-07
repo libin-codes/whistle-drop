@@ -328,26 +328,29 @@
                 <div id="mod-detail-content" class="hidden">
                     <div class="mod-header">
                         <div class="mod-detail-title-group">
-                            <h2 id="mod-detail-heading">Report Details</h2>
-                            <div class="mod-detail-badges">
-                                <span id="mod-det-status" class="badge"></span>
-                                <span id="mod-det-cat" class="cat-badge"></span>
-                            </div>
-                        </div>
-                        <div class="mod-detail-header-actions">
-                            <button type="button" class="btn btn-outline btn-sm btn-mod-back" id="btn-mod-close-detail" onclick="closeModDetail()" title="Back to Reports Queue" aria-label="Back to Reports Queue">
+                            <button type="button" class="btn btn-ghost btn-sm btn-mod-back" id="btn-mod-close-detail" onclick="closeModDetail()" title="Back to Reports Queue" aria-label="Back to Reports Queue">
                                 <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                                 Back
                             </button>
+                            <h2 id="mod-detail-heading">Report Details</h2>
+                        </div>
+                        <div class="mod-detail-header-actions">
+                            <span id="mod-det-status" class="badge"></span>
                         </div>
                     </div>
 
                     <!-- Consolidated Overview Card -->
                     <div class="inspector-overview-card" id="mod-overview-card">
-                        <div class="detail-grid">
+                        <div class="detail-grid detail-grid-3">
                             <div>
                                 <span class="detail-label">Report ID</span>
                                 <div id="mod-det-id" class="detail-val"></div>
+                            </div>
+                            <div>
+                                <span class="detail-label">Category</span>
+                                <div class="detail-val">
+                                    <span id="mod-det-cat" class="cat-badge"></span>
+                                </div>
                             </div>
                             <div>
                                 <span class="detail-label">Submitted At</span>

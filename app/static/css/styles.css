@@ -2095,6 +2095,21 @@ textarea {
     color: #3b82f6;
 }
 
+.btn-ghost.btn-mod-back,
+.btn-ghost#btn-mod-close-detail {
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: var(--muted-foreground);
+    padding: 6px 12px;
+}
+
+.btn-ghost.btn-mod-back:hover,
+.btn-ghost#btn-mod-close-detail:hover {
+    background-color: var(--accent);
+    color: var(--foreground);
+    border-color: transparent;
+}
+
 .triage-empty-detail {
     display: flex;
     flex-direction: column;
@@ -2164,6 +2179,7 @@ textarea {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-left: auto;
 }
 
 .detail-grid {
@@ -2175,6 +2191,10 @@ textarea {
     border-radius: var(--radius);
     border: 1px solid var(--border);
     margin-bottom: var(--spacing-md);
+}
+
+.detail-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
 }
 
 .detail-label {
@@ -2413,7 +2433,7 @@ textarea {
     .header-auth-controls { width: 100%; justify-content: space-between; }
     .card-header-row { flex-direction: column; align-items: flex-start; gap: 12px; }
     .btn-submit-report { width: 100%; justify-content: center; }
-    .detail-grid { grid-template-columns: 1fr; }
+    .detail-grid, .detail-grid-3 { grid-template-columns: 1fr; }
     .tabs { flex-wrap: nowrap; }
     .header h1 { font-size: 1.8rem; }
     .case-code { font-size: 1.7rem; }

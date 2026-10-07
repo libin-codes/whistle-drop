@@ -1095,6 +1095,8 @@ class TestEndToEndSmoke:
         assert "triage-filters" in css
         assert "triage-search-wrap" in css
         assert "triage-filter-selects" in css
+        assert "btn-ghost" in css
+        assert "detail-grid-3" in css
 
         # 3. Queue table subtle trailing column header and chevron icon
         assert '<th scope="col" class="th-actions"' in html
@@ -1115,25 +1117,42 @@ class TestEndToEndSmoke:
         assert "mod-detail-nav-bar" not in html
         assert "← Back to Reports" not in html
 
-        # 6. Inspector header Back button
+        # 6. Inspector header Back button on left as ghost button, status badge on right
         assert 'id="btn-mod-close-detail"' in html
-        close_btn_idx = html.find('id="btn-mod-close-detail"')
-        close_btn_end = html.find('</button>', close_btn_idx)
-        close_btn_snippet = html[close_btn_idx:close_btn_end]
+        close_btn_id_idx = html.find('id="btn-mod-close-detail"')
+        close_btn_start = html.rfind('<button', 0, close_btn_id_idx)
+        close_btn_end = html.find('</button>', close_btn_id_idx)
+        close_btn_snippet = html[close_btn_start:close_btn_end]
         assert "Back" in close_btn_snippet
+        assert "btn-ghost" in close_btn_snippet
         assert "Close Inspector" not in close_btn_snippet
         assert "m12 19-7-7 7-7" in close_btn_snippet or "arrowLeft" in close_btn_snippet
 
-        # 7. Single consolidated overview container
+        # Back button is placed on the left before report details heading
+        heading_idx = html.find('id="mod-detail-heading"')
+        assert close_btn_start < heading_idx, "Back button should be positioned on the left before the heading"
+
+        # Status badge is positioned in mod-detail-header-actions on the right
+        header_actions_start = html.find('class="mod-detail-header-actions"')
+        assert header_actions_start != -1
+        header_actions_end = html.find('</div>', header_actions_start)
+        actions_snippet = html[header_actions_start:header_actions_end]
+        assert 'id="mod-det-status"' in actions_snippet
+        assert 'id="btn-mod-close-detail"' not in actions_snippet
+        assert 'id="mod-det-cat"' not in actions_snippet
+
+        # 7. Single consolidated overview container with 3-column grid including Category badge
         assert 'id="mod-overview-card"' in html or 'class="inspector-overview-card"' in html
         card_start = html.find('id="mod-overview-card"')
         if card_start == -1:
             card_start = html.find('class="inspector-overview-card"')
         assert card_start != -1
-        # Overview card must encompass ID, Created, Description, and Evidence
+        # Overview card must encompass ID, Category badge, Created, Description, and Evidence
         card_end = html.find('id="mod-split-row"', card_start)
         overview_snippet = html[card_start:card_end]
+        assert 'detail-grid-3' in overview_snippet
         assert 'id="mod-det-id"' in overview_snippet
+        assert 'id="mod-det-cat"' in overview_snippet
         assert 'id="mod-det-created"' in overview_snippet
         assert 'id="mod-det-desc"' in overview_snippet
         assert 'id="mod-det-evidence-container"' in overview_snippet
