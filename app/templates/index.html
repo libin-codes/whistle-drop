@@ -49,24 +49,33 @@
         </div>
     </header>
 
-    <div class="tabs" id="public-tabs">
-        <button class="tab-btn active" id="tab-btn-submit" onclick="switchTab('submit')">
+    <div class="tabs" id="public-tabs" role="tablist" aria-label="Whistleblower Actions">
+        <button type="button" class="tab-btn segmented-btn active" id="tab-btn-submit" onclick="switchTab('submit')" role="tab" aria-selected="true" aria-controls="tab-submit">
             <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             Submit Report
         </button>
-        <button class="tab-btn" id="tab-btn-track" onclick="switchTab('track')">
+        <button type="button" class="tab-btn segmented-btn" id="tab-btn-track" onclick="switchTab('track')" role="tab" aria-selected="false" aria-controls="tab-track">
             <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             Track Report
         </button>
     </div>
 
     <!-- TAB 1: SUBMIT REPORT -->
-    <div id="tab-submit" class="tab-content active">
+    <div id="tab-submit" class="tab-content active" role="tabpanel" aria-labelledby="tab-btn-submit">
         <div class="card" id="submit-card">
-            <h2>Submit an Anonymous Report</h2>
-            <p style="color: var(--muted-foreground); font-size: 0.9rem; margin-bottom: 16px;">
-                Your report is encrypted and protected by zero-knowledge case code hashing. No IP addresses or identifying device metadata are ever recorded.
-            </p>
+            <div class="card-header-row">
+                <div>
+                    <h2>Submit an Anonymous Report</h2>
+                    <p class="card-subtitle">
+                        Your report is protected by zero-knowledge case code hashing (ADR-0001). No IP addresses or identifying device metadata are ever recorded.
+                    </p>
+                </div>
+                <div class="zk-pill">
+                    <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Zero-Knowledge Encrypted
+                </div>
+            </div>
+
             <form id="submit-form" onsubmit="submitReport(event)">
                 <div class="form-group">
                     <label for="submit-category">Issue Category</label>
@@ -81,18 +90,45 @@
 
                 <div class="form-group">
                     <label for="submit-desc">Report Description</label>
-                    <textarea id="submit-desc" required placeholder="Provide all relevant details anonymously. Avoid including your own identifying details..."></textarea>
+                    <textarea id="submit-desc" required placeholder="Provide all relevant details anonymously. Avoid including your own identifying details or credentials..."></textarea>
                 </div>
 
                 <div class="form-group">
                     <label for="submit-evidence">Image Evidence (Optional, max 5 MB)</label>
-                    <input type="file" id="submit-evidence" accept="image/jpeg,image/png,image/webp">
-                    <small style="color: var(--muted-foreground); font-size: 0.8rem; display: block; margin-top: 4px;">
-                        All camera EXIF, GPS coordinates, and device timestamps are stripped in-memory before storage.
-                    </small>
+                    <div class="dropzone" id="evidence-dropzone" tabindex="0" role="button" aria-label="Dropzone for image evidence upload">
+                        <input type="file" id="submit-evidence" accept="image/jpeg,image/png,image/webp" class="dropzone-input" aria-label="Upload evidence file">
+                        <div class="dropzone-body" id="dropzone-prompt">
+                            <div class="dropzone-icon">
+                                <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                            </div>
+                            <div class="dropzone-text">
+                                <div class="dropzone-title">Drop evidence image here, or <span class="dropzone-browse">browse</span></div>
+                                <div class="dropzone-meta">Supports PNG, JPEG, or WebP up to 5 MB</div>
+                            </div>
+                        </div>
+
+                        <div class="dropzone-file-selected hidden" id="dropzone-file-selected">
+                            <div class="dropzone-file-info">
+                                <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                <div>
+                                    <div class="dropzone-filename" id="dropzone-filename">file.png</div>
+                                    <div class="dropzone-filesize" id="dropzone-filesize">1.2 MB</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-ghost btn-sm dropzone-remove-btn" id="dropzone-remove-btn" onclick="clearEvidenceFile(event)" title="Remove attached file" aria-label="Remove attached evidence file">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <div class="dropzone-scrub-badge" id="dropzone-scrub-notice">
+                            <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            <span><strong>In-Memory EXIF Scrubbing:</strong> Device GPS coordinates, camera model, and creation timestamps are physically stripped in RAM before storage.</span>
+                        </div>
+                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" id="btn-submit">
+                <button type="submit" class="btn btn-primary btn-submit-report" id="btn-submit">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     Submit Report Securely
                 </button>
                 <div id="submit-error" class="error-message hidden"></div>
@@ -100,74 +136,144 @@
         </div>
 
         <div class="card hidden" id="success-card">
-            <h2 style="color: var(--accent-green); display: flex; align-items: center; gap: 8px;">
-                <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                Report Submitted Securely
-            </h2>
-            <p style="color: var(--foreground);">
-                Your report has been received and assigned a cryptographically random, zero-knowledge Case Code:
-            </p>
-
-            <div class="case-code-box">
-                <div style="color: var(--muted-foreground); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Your Secret Case Code</div>
-                <div class="case-code" id="success-case-code">WD-XXXX-XXXX</div>
-                <button class="btn btn-outline" id="btn-copy-code" onclick="copyCaseCode()">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                    Copy Case Code
-                </button>
+            <div class="success-header">
+                <div class="success-icon-badge">
+                    <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                    <h2 class="success-title">Report Submitted Securely</h2>
+                    <p class="success-subtitle">
+                        Your confidential report has been received and registered under zero-knowledge encryption.
+                    </p>
+                </div>
             </div>
 
-            <div class="warning-box">
-                <strong>CRITICAL:</strong> Save this Case Code immediately. WhistleDrop stores only a one-way SHA-256 hash.
-                This plaintext code is <strong>NEVER shown again and cannot be recovered</strong> by anyone, including system administrators.
+            <div class="case-code-card">
+                <div class="case-code-card-header">
+                    <div class="case-code-label">
+                        <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Your Secret Zero-Knowledge Case Code
+                    </div>
+                    <span class="badge badge-zk">One-Time Reveal</span>
+                </div>
+                <div class="case-code-value-wrap">
+                    <div class="case-code" id="success-case-code">WD-XXXX-XXXX</div>
+                    <button type="button" class="btn btn-outline btn-copy-case-code" id="btn-copy-code" onclick="copyCaseCode()">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        Copy Case Code
+                    </button>
+                </div>
             </div>
 
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
-                <button class="btn btn-primary" id="btn-track-submitted-case" onclick="trackCaseFromSuccess()">
+            <div class="warning-box zk-warning-card">
+                <div class="zk-warning-title">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                    <strong>CRITICAL ZERO-KNOWLEDGE NOTICE (ADR-0001)</strong>
+                </div>
+                <p>
+                    Save this Case Code immediately in a secure location. WhistleDrop stores only a one-way cryptographic SHA-256 hash.
+                    This plaintext code is <strong>NEVER shown again and cannot be recovered</strong> by anyone, including system administrators.
+                </p>
+            </div>
+
+            <div class="success-actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
+                <button type="button" class="btn btn-primary btn-lg" id="btn-track-submitted-case" onclick="trackCaseFromSuccess()">
                     <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     Track This Case Now
                 </button>
-                <button class="btn btn-outline" onclick="resetSubmit()">Submit Another Report</button>
+                <button type="button" class="btn btn-outline btn-lg" onclick="resetSubmit()">
+                    Submit Another Report
+                </button>
             </div>
         </div>
     </div>
 
     <!-- TAB 2: TRACK REPORT -->
-    <div id="tab-track" class="tab-content">
+    <div id="tab-track" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-track">
         <div class="card" id="track-search-card">
-            <h2>Track Anonymous Report</h2>
-            <p style="color: var(--muted-foreground); font-size: 0.9rem; margin-bottom: 16px;">
-                Enter your Case Code to check investigation status and access the bidirectional Dead Drop communication thread.
-            </p>
+            <div class="card-header-row">
+                <div>
+                    <h2>Track Anonymous Report</h2>
+                    <p class="card-subtitle">
+                        Enter your Case Code to check investigation status and access the bidirectional Dead Drop communication thread.
+                    </p>
+                </div>
+            </div>
             <form id="track-form" onsubmit="trackReport(event)">
                 <div class="form-group">
                     <label for="track-code">Case Code</label>
-                    <input type="text" id="track-code" required placeholder="e.g. WD-ABCD-1234" autocomplete="off" spellcheck="false">
+                    <div class="track-input-group">
+                        <input type="text" id="track-code" required placeholder="e.g. WD-ABCD-1234" autocomplete="off" spellcheck="false" class="track-code-input">
+                        <button type="submit" class="btn btn-primary" id="btn-track">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            Track Case
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary" id="btn-track">Track Case</button>
                 <div id="track-error" class="error-message hidden"></div>
             </form>
         </div>
 
         <div class="card hidden" id="track-result-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
-                <div>
-                    <h2>Case Status: <span id="track-status" class="badge"></span></h2>
-                    <span id="track-category" class="cat-badge mt-2"></span>
+            <div class="track-result-header">
+                <div class="track-case-meta">
+                    <div class="track-code-pill">
+                        <span class="track-code-label">Tracking Case:</span>
+                        <span class="track-code-val" id="track-display-code">WD-ABCD-1234</span>
+                    </div>
+                    <div class="track-badge-group">
+                        <h2>Case Status: <span id="track-status" class="badge"></span></h2>
+                        <span id="track-category" class="cat-badge"></span>
+                    </div>
                 </div>
-                <button class="btn btn-outline" onclick="resetTrack()">
+                <button type="button" class="btn btn-outline btn-sm" onclick="resetTrack()">
                     <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                     Search Another Case
                 </button>
             </div>
 
-            <div id="track-note-container" class="hidden" style="margin-bottom: 16px; padding: 12px; background: rgba(34, 197, 94, 0.08); border-left: 3px solid var(--accent-green); border-radius: var(--radius);">
-                <strong style="color: #4ade80; font-size: 0.85rem; text-transform: uppercase;">Moderator Status Update:</strong>
-                <div id="track-note" style="margin-top: 6px; color: var(--foreground); font-size: 0.95rem;"></div>
+            <!-- Status Workflow Stepper -->
+            <div class="workflow-stepper" id="track-stepper" aria-label="Status Workflow Progress">
+                <div class="step-item" id="step-submitted">
+                    <div class="step-dot"></div>
+                    <div class="step-label">Submitted</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item" id="step-under-review">
+                    <div class="step-dot"></div>
+                    <div class="step-label">Under Review</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item" id="step-resolved">
+                    <div class="step-dot"></div>
+                    <div class="step-label">Resolved / Dismissed</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item" id="step-closed">
+                    <div class="step-dot"></div>
+                    <div class="step-label">Closed</div>
+                </div>
             </div>
 
-            <div style="margin-top: 20px;">
-                <h4>Dead Drop Message Thread</h4>
+            <!-- Public Moderator Status Update Callout -->
+            <div id="track-note-container" class="hidden moderator-update-callout">
+                <div class="callout-header">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span class="callout-title">Public Moderator Status Update</span>
+                </div>
+                <div id="track-note" class="callout-content"></div>
+            </div>
+
+            <!-- Dead Drop Message Thread Section -->
+            <div class="thread-section" style="margin-top: 24px;">
+                <div class="thread-header">
+                    <div class="thread-title">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <h4>Dead Drop Message Thread</h4>
+                    </div>
+                    <div class="thread-badge">Confidential & Asynchronous</div>
+                </div>
+
                 <div class="thread-container" id="track-thread">
                     <!-- Populated dynamically -->
                 </div>
@@ -175,7 +281,7 @@
                 <form id="track-reply-form" onsubmit="sendTrackReply(event)">
                     <div class="form-group">
                         <label for="track-reply-text">Post Confidential Reply</label>
-                        <textarea id="track-reply-text" required placeholder="Send an anonymous message to the reviewing moderator..." style="min-height: 80px;"></textarea>
+                        <textarea id="track-reply-text" required placeholder="Send an anonymous confidential reply to the reviewing moderator..." style="min-height: 80px;"></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary" id="btn-track-reply">
                         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
@@ -183,8 +289,15 @@
                     </button>
                     <div id="track-reply-error" class="error-message hidden"></div>
                 </form>
-                <div id="track-closed-notice" class="hidden warning-box" style="margin-top: 12px;">
-                    This case is <strong>permanently closed</strong>. The Dead Drop thread has been permanently frozen against new replies (ADR-0002).
+
+                <div id="track-closed-notice" class="hidden warning-box frozen-thread-notice">
+                    <div class="frozen-notice-header">
+                        <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                        <strong>Case Permanently Closed — Dead Drop Thread Frozen (ADR-0002)</strong>
+                    </div>
+                    <p>
+                        This report has reached its irreversible terminal state. In accordance with zero-knowledge data minimization (ADR-0002), the report description was overwritten with the standardized Redaction Marker, evidence files were permanently shredded from disk, and this Dead Drop thread is frozen against all new messages.
+                    </p>
                 </div>
             </div>
         </div>

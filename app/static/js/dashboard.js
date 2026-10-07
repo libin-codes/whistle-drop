@@ -190,13 +190,19 @@ function switchWorkspace(view) {
 
 // --- Tab Navigation (Public Tabs) ---
 function switchTab(tabId) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
+    });
     document.querySelectorAll('.tab-content').forEach(c => {
         if (c.id !== 'tab-mod') c.classList.remove('active');
     });
 
     const targetBtn = document.getElementById('tab-btn-' + tabId);
-    if (targetBtn) targetBtn.classList.add('active');
+    if (targetBtn) {
+        targetBtn.classList.add('active');
+        targetBtn.setAttribute('aria-selected', 'true');
+    }
 
     const targetTab = document.getElementById('tab-' + tabId);
     if (targetTab) targetTab.classList.add('active');
@@ -207,6 +213,146 @@ function switchTab(tabId) {
         } else {
             openLoginModal();
         }
+    }
+}
+
+// --- In-Memory Scrubbed Evidence Dropzone Helpers ---
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+function handleFileSelection() {
+    const fileInput = document.getElementById('submit-evidence');
+    const promptEl = document.getElementById('dropzone-prompt');
+    const selectedEl = document.getElementById('dropzone-file-selected');
+    const nameEl = document.getElementById('dropzone-filename');
+    const sizeEl = document.getElementById('dropzone-filesize');
+
+    if (!fileInput) return;
+
+    if (fileInput.files && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        if (file.size > 5 * 1024 * 1024) {
+            showError('submit-error', 'Evidence file exceeds maximum size of 5 MB.');
+            showToast('File Too Large', 'Evidence file must be 5 MB or smaller.', 'error');
+            clearEvidenceFile();
+            return;
+        }
+        clearError('submit-error');
+        if (nameEl) nameEl.textContent = file.name;
+        if (sizeEl) sizeEl.textContent = formatFileSize(file.size);
+        if (promptEl) promptEl.classList.add('hidden');
+        if (selectedEl) selectedEl.classList.remove('hidden');
+    } else {
+        if (promptEl) promptEl.classList.remove('hidden');
+        if (selectedEl) selectedEl.classList.add('hidden');
+    }
+}
+
+function clearEvidenceFile(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    const fileInput = document.getElementById('submit-evidence');
+    if (fileInput) fileInput.value = '';
+    const promptEl = document.getElementById('dropzone-prompt');
+    const selectedEl = document.getElementById('dropzone-file-selected');
+    if (promptEl) promptEl.classList.remove('hidden');
+    if (selectedEl) selectedEl.classList.add('hidden');
+}
+
+function initDropzone() {
+    const dropzone = document.getElementById('evidence-dropzone');
+    const fileInput = document.getElementById('submit-evidence');
+    if (!dropzone || !fileInput) return;
+
+    dropzone.addEventListener('click', (e) => {
+        if (e.target.closest('#dropzone-remove-btn')) return;
+        fileInput.click();
+    });
+
+    dropzone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            if (e.target.closest('#dropzone-remove-btn')) return;
+            e.preventDefault();
+            fileInput.click();
+        }
+    });
+
+    fileInput.addEventListener('change', handleFileSelection);
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('dropzone-active');
+        }, false);
+    });
+
+    ['dragleave', 'dragend'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dropzone-active');
+        }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('dropzone-active');
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+            fileInput.files = dt.files;
+            handleFileSelection();
+        }
+    }, false);
+}
+
+// --- Status Workflow Stepper Helper ---
+function updateWorkflowStepper(status) {
+    const steps = ['step-submitted', 'step-under-review', 'step-resolved', 'step-closed'];
+    steps.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active', 'completed', 'dismissed');
+    });
+
+    const stepSub = document.getElementById('step-submitted');
+    const stepRev = document.getElementById('step-under-review');
+    const stepRes = document.getElementById('step-resolved');
+    const stepClo = document.getElementById('step-closed');
+
+    if (!stepSub) return;
+
+    if (status === 'SUBMITTED') {
+        stepSub.classList.add('active');
+    } else if (status === 'UNDER_REVIEW') {
+        stepSub.classList.add('completed');
+        if (stepRev) stepRev.classList.add('active');
+    } else if (status === 'RESOLVED') {
+        stepSub.classList.add('completed');
+        if (stepRev) stepRev.classList.add('completed');
+        if (stepRes) {
+            stepRes.classList.add('active');
+            const label = stepRes.querySelector('.step-label');
+            if (label) label.textContent = 'Resolved';
+        }
+    } else if (status === 'DISMISSED') {
+        stepSub.classList.add('completed');
+        if (stepRev) stepRev.classList.add('completed');
+        if (stepRes) {
+            stepRes.classList.add('active', 'dismissed');
+            const label = stepRes.querySelector('.step-label');
+            if (label) label.textContent = 'Dismissed';
+        }
+    } else if (status === 'PERMANENTLY_CLOSED') {
+        stepSub.classList.add('completed');
+        if (stepRev) stepRev.classList.add('completed');
+        if (stepRes) stepRes.classList.add('completed');
+        if (stepClo) stepClo.classList.add('active');
     }
 }
 
@@ -244,7 +390,13 @@ function renderThread(containerId, messages) {
     container.innerHTML = '';
 
     if (!messages || messages.length === 0) {
-        container.innerHTML = '<div style="color: var(--muted-foreground); text-align: center; padding: 24px; font-size: 0.875rem;">No messages in this Dead Drop thread yet.</div>';
+        container.innerHTML = `
+            <div class="thread-empty-state">
+                ${getIcon('lock', 'icon icon-lg')}
+                <p>No messages in this Dead Drop thread yet.</p>
+                <span>The reviewing moderator will post inquiries here if additional details are needed.</span>
+            </div>
+        `;
         return;
     }
 
@@ -256,11 +408,12 @@ function renderThread(containerId, messages) {
         const meta = document.createElement('div');
         meta.className = 'msg-meta';
         const dateStr = msg.created_at ? new Date(msg.created_at).toLocaleString() : '';
-        const roleIcon = isMod ? getIcon('shield', 'icon icon-xs') : getIcon('lock', 'icon icon-xs');
-        const roleLabel = isMod ? 'Moderator' : 'Whistleblower';
-        meta.innerHTML = `${roleIcon} <span>${roleLabel}</span>${dateStr ? ' • ' + dateStr : ''}`;
+        const roleIcon = isMod ? getIcon('shield', 'icon icon-xs') : getIcon('user', 'icon icon-xs');
+        const roleLabel = isMod ? 'Moderator' : 'Whistleblower (You)';
+        meta.innerHTML = `${roleIcon} <span class="msg-author">${roleLabel}</span>${dateStr ? ' • <span class="msg-date">' + dateStr + '</span>' : ''}`;
 
         const content = document.createElement('div');
+        content.className = 'msg-content';
         content.style.whiteSpace = 'pre-wrap';
         content.textContent = msg.content || msg.message || '';
 
@@ -330,6 +483,9 @@ async function submitReport(e) {
 
         const repData = await repRes.json();
 
+        // Clear dropzone file selection
+        clearEvidenceFile();
+
         // Display success
         document.getElementById('submit-card').classList.add('hidden');
         document.getElementById('success-card').classList.remove('hidden');
@@ -345,6 +501,7 @@ async function submitReport(e) {
 
 function resetSubmit() {
     document.getElementById('submit-form').reset();
+    clearEvidenceFile();
     clearError('submit-error');
     document.getElementById('submit-card').classList.remove('hidden');
     document.getElementById('success-card').classList.add('hidden');
@@ -390,6 +547,12 @@ async function trackReport(e) {
         const data = await res.json();
         currentTrackCode = code;
 
+        // Render tracked code display
+        const codeDisplay = document.getElementById('track-display-code');
+        if (codeDisplay) {
+            codeDisplay.textContent = code;
+        }
+
         // Render status & metadata
         const statusBadge = document.getElementById('track-status');
         statusBadge.className = 'badge ' + data.status;
@@ -397,6 +560,9 @@ async function trackReport(e) {
 
         const catBadge = document.getElementById('track-category');
         catBadge.textContent = 'Category: ' + data.category;
+
+        // Update workflow stepper
+        updateWorkflowStepper(data.status);
 
         // Render note
         const noteContainer = document.getElementById('track-note-container');
@@ -846,7 +1012,7 @@ async function triggerPermanentClosure() {
     }
 }
 
-// --- Window Global Bindings ---
+// --- Window Global Bindings & Initialization ---
 window.openLoginModal = openLoginModal;
 window.closeLoginModal = closeLoginModal;
 window.handleModalOverlayClick = handleModalOverlayClick;
@@ -854,3 +1020,22 @@ window.switchWorkspace = switchWorkspace;
 window.switchTab = switchTab;
 window.modLogin = modLogin;
 window.modLogout = modLogout;
+window.handleFileSelection = handleFileSelection;
+window.clearEvidenceFile = clearEvidenceFile;
+window.updateWorkflowStepper = updateWorkflowStepper;
+window.trackCaseFromSuccess = trackCaseFromSuccess;
+window.copyCaseCode = copyCaseCode;
+window.submitReport = submitReport;
+window.resetSubmit = resetSubmit;
+window.trackReport = trackReport;
+window.resetTrack = resetTrack;
+window.sendTrackReply = sendTrackReply;
+window.renderThread = renderThread;
+
+// Initialize components when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDropzone);
+} else {
+    initDropzone();
+}
+
