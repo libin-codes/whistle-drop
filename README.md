@@ -121,6 +121,70 @@ All primary endpoints are prefixed with `/api/v1`.
   }
   ```
 
+### 4. Moderator Login
+- **`POST /api/v1/auth/login`**
+- **Request Body**:
+  ```json
+  {
+    "username": "moderator",
+    "password": "moderator123"
+  }
+  ```
+  > **Note**: A default moderator account (`moderator` / `moderator123`) is auto-seeded on application startup.
+- **Response** (`200 OK`):
+  ```json
+  {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "bearer",
+    "expires_in": 86400
+  }
+  ```
+
+### 5. List and Filter Reports (Moderator)
+- **`GET /api/v1/moderator/reports`**
+- **Headers**: `Authorization: Bearer <access_token>`
+- **Query Parameters**:
+  - `status` (optional): `SUBMITTED`, `UNDER_REVIEW`, `RESOLVED`, `DISMISSED`
+  - `category` (optional): `SECURITY`, `HARASSMENT`, `CORRUPTION`, `TECHNICAL`, `OTHER`
+  - `limit` (optional, default 50)
+  - `offset` (optional, default 0)
+- **Response** (`200 OK`):
+  ```json
+  [
+    {
+      "id": 1,
+      "category": "SECURITY",
+      "description": "Observed unauthorized access credentials committed to public repositories.",
+      "evidence_url": "/uploads/example.png",
+      "status": "SUBMITTED",
+      "status_note": null,
+      "created_at": "2026-10-06T20:00:00Z",
+      "updated_at": "2026-10-06T20:00:00Z"
+    }
+  ]
+  ```
+
+### 6. Get Report Details (Moderator)
+- **`GET /api/v1/moderator/reports/{report_id}`**
+- **Headers**: `Authorization: Bearer <access_token>`
+- **Response** (`200 OK`): Full report details (404 if not found).
+
+### 7. Advance Report Status Workflow (Moderator)
+- **`PATCH /api/v1/moderator/reports/{report_id}/status`**
+- **Headers**: `Authorization: Bearer <access_token>`
+- **Request Body**:
+  ```json
+  {
+    "status": "UNDER_REVIEW",
+    "status_update": "Assigned to primary investigator."
+  }
+  ```
+  _Enforced transitions_:
+  - `SUBMITTED` → `UNDER_REVIEW`, `DISMISSED`
+  - `UNDER_REVIEW` → `RESOLVED`, `DISMISSED`
+  Illegal transitions return `HTTP 400 Bad Request`.
+- **Response** (`200 OK`): Updated report object.
+
 ---
 
 ## Running Tests
@@ -136,6 +200,9 @@ The test suite covers:
 - Report submission and validation (category normalization, rejection of blank descriptions)
 - Image upload validation and in-memory EXIF metadata stripping
 - Zero-knowledge status tracking and sliding-window rate limiting
+- Moderator auto-seeding, JWT authentication, and Bearer token enforcement
+- Filtered report review with category/status filters and pagination
+- Forward-only Status Workflow transitions and illegal jump rejection
 
 ---
 

@@ -55,3 +55,18 @@ class Report(Base):
         DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
     )
 
+
+class Moderator(Base):
+    """An authenticated moderator authorized to triage and update reports."""
+
+    __tablename__ = "moderators"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    username: Mapped[str] = mapped_column(
+        String(64), unique=True, nullable=False, index=True
+    )
+    hashed_password: Mapped[str] = mapped_column(String(256), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+
