@@ -24,23 +24,15 @@
                         Moderator Login
                     </button>
                 </div>
-                <!-- Authenticated State: Badge, Segmented Toggle & Logout -->
+                <!-- Authenticated State: Identity Badge & Consistent Logout Button -->
                 <div id="auth-header-actions" class="header-auth-controls hidden">
-                    <div class="segmented-control" id="workspace-toggle" role="tablist" aria-label="Workspace View">
-                        <button type="button" class="segmented-btn active" id="btn-view-whistleblower" onclick="switchWorkspace('whistleblower')" role="tab" aria-selected="true">
-                            Whistleblower View
-                        </button>
-                        <button type="button" class="segmented-btn" id="btn-view-triage" onclick="switchWorkspace('triage')" role="tab" aria-selected="false">
-                            Triage Workspace
-                        </button>
-                    </div>
                     <div class="mod-identity-badge" id="mod-identity-badge">
                         <span class="badge badge-moderator" id="mod-badge">
                             <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                             Moderator: <span id="mod-badge-username">moderator</span>
                         </span>
                     </div>
-                    <button type="button" class="btn btn-outline btn-sm" id="btn-mod-logout" onclick="modLogout()" title="Log out of Moderator Portal">
+                    <button type="button" class="btn btn-outline" id="btn-mod-logout" onclick="modLogout()" title="Log out of Moderator Portal">
                         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                         Logout
                     </button>

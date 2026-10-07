@@ -197,11 +197,9 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
-// --- Workspace Navigation (Segmented Toggle) ---
+// --- Workspace Navigation & View Switching ---
 function switchWorkspace(view) {
     currentWorkspace = view;
-    const btnWhistleblower = document.getElementById('btn-view-whistleblower');
-    const btnTriage = document.getElementById('btn-view-triage');
     const publicTabs = document.getElementById('public-tabs');
     const tabMod = document.getElementById('tab-mod');
     const modDashboard = document.getElementById('mod-dashboard');
@@ -209,14 +207,6 @@ function switchWorkspace(view) {
 
     if (view === 'triage') {
         if (container) container.classList.add('triage-mode');
-        if (btnWhistleblower) {
-            btnWhistleblower.classList.remove('active');
-            btnWhistleblower.setAttribute('aria-selected', 'false');
-        }
-        if (btnTriage) {
-            btnTriage.classList.add('active');
-            btnTriage.setAttribute('aria-selected', 'true');
-        }
 
         // Hide public tabs & public views
         if (publicTabs) publicTabs.style.display = 'none';
@@ -242,14 +232,6 @@ function switchWorkspace(view) {
     } else {
         // Whistleblower view
         if (container) container.classList.remove('triage-mode');
-        if (btnTriage) {
-            btnTriage.classList.remove('active');
-            btnTriage.setAttribute('aria-selected', 'false');
-        }
-        if (btnWhistleblower) {
-            btnWhistleblower.classList.add('active');
-            btnWhistleblower.setAttribute('aria-selected', 'true');
-        }
 
         // Hide moderator workspace
         if (tabMod) tabMod.classList.remove('active');
@@ -785,18 +767,6 @@ function modLogout() {
     const authActions = document.getElementById('auth-header-actions');
     if (unauthActions) unauthActions.classList.remove('hidden');
     if (authActions) authActions.classList.add('hidden');
-
-    // Reset workspace toggle buttons
-    const btnWhistleblower = document.getElementById('btn-view-whistleblower');
-    const btnTriage = document.getElementById('btn-view-triage');
-    if (btnWhistleblower) {
-        btnWhistleblower.classList.add('active');
-        btnWhistleblower.setAttribute('aria-selected', 'true');
-    }
-    if (btnTriage) {
-        btnTriage.classList.remove('active');
-        btnTriage.setAttribute('aria-selected', 'false');
-    }
 
     // Reset moderator views
     const tabMod = document.getElementById('tab-mod');

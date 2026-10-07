@@ -301,8 +301,8 @@ class TestEndToEndSmoke:
         """Ticket 2 acceptance criteria:
         - Moderator Portal removed from public tab bar; outline 'Moderator Login' button in header top-right
         - Accessible login dialog modal with backdrop blur, keyboard support (Escape to dismiss), and error feedback
-        - Successful login persists JWT in state, closes modal, renders moderator badge & Logout button
-        - Authenticated header provides segmented toggle to switch between Triage Workspace and Whistleblower View
+        - Successful login persists JWT in state, closes modal, renders moderator badge & consistent Logout button
+        - Authenticated view strictly enforces role separation (no whistleblower view for moderators)
         - Clicking Logout clears session, resets header to 'Moderator Login', and returns to public view
         - Zero external scripts or styles
         """
@@ -337,12 +337,14 @@ class TestEndToEndSmoke:
         assert "mod-login-error" in html
         assert "closeLoginModal" in html
 
-        # 5. Authenticated header navigation elements
-        assert "workspace-toggle" in html
-        assert "Triage Workspace" in html
-        assert "Whistleblower View" in html
+        # 5. Authenticated header navigation elements (role separation & consistent button styling)
         assert "mod-badge" in html
         assert "btn-mod-logout" in html
+        assert 'class="btn btn-outline" id="btn-open-mod-login"' in html
+        assert 'class="btn btn-outline" id="btn-mod-logout"' in html
+        assert "Triage Workspace" in html
+        assert "workspace-toggle" not in html
+        assert "Whistleblower View" not in html
 
         # 6. CSS styles verification
         css_resp = await client.get("/static/css/styles.css")
