@@ -1908,10 +1908,46 @@ textarea {
     color: #93c5fd;
 }
 
-/* Right Pane: Detail Inspector */
+/* Full-Width Report Details Drill-Down View */
 .triage-detail-pane {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     min-height: 600px;
     padding: var(--spacing-md);
+}
+
+/* Drill-Down Details Top Navigation Bar */
+.mod-detail-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.btn-mod-back,
+#btn-mod-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--foreground);
+    background-color: var(--secondary);
+    border: 1px solid var(--border);
+    padding: 7px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-mod-back:hover,
+#btn-mod-back:hover {
+    background-color: var(--muted);
+    border-color: #3b82f6;
+    color: #3b82f6;
 }
 
 .triage-empty-detail {

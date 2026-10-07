@@ -763,6 +763,225 @@ class TestEndToEndSmoke:
         sec_reports = sec_resp.json()
         assert all(r["category"] == "SECURITY" for r in sec_reports)
 
+    async def test_drill_down_report_details_and_full_lifecycle(self, client, auth_headers, tmp_path):
+        """Issue #22 acceptance criteria:
+        - Clicking a report row or "View" button in the table switches the view to a dedicated full-width Report Details view.
+        - A prominent "← Back to Reports" button in the details view header returns the interface to the reports table view.
+        - The full-width details view displays complete report metadata, full description box, and scrubbed evidence preview link when present.
+        - Status Workflow transition buttons render based on current lifecycle state and successfully submit forward transitions with public notes.
+        - The Dead Drop message thread displays history and allows posting new messages when open.
+        - Permanent Case Closure (ADR-0002) executes via an accessible confirmation modal dialog, shreds evidence, and freezes the Dead Drop thread.
+        - After closure, the details view displays the frozen thread state, and the moderator can navigate back to the reports table using the back button.
+        - Automated end-to-end smoke tests verify the view transition, back button functionality, inspector details, and full lifecycle execution.
+        """
+        # 1. HTML Markup & Layout Verification for Report Details Drill-Down View
+        resp = await client.get("/")
+        assert resp.status_code == 200
+        html = resp.text
+
+        # Full-width details view and top navigation bar
+        assert 'id="mod-detail-view"' in html
+        assert 'triage-detail-pane' in html
+        assert 'id="mod-detail-content"' in html
+        assert 'mod-detail-nav-bar' in html
+        assert 'id="btn-mod-back"' in html
+        assert 'onclick="closeModDetail()"' in html
+        assert '← Back to Reports' in html
+
+        # Report Metadata & Description
+        assert 'id="mod-detail-heading"' in html
+        assert 'id="mod-det-id"' in html
+        assert 'id="mod-det-created"' in html
+        assert 'id="mod-det-status"' in html
+        assert 'id="mod-det-cat"' in html
+        assert 'id="mod-det-desc"' in html
+        assert 'mod-description-box' in html
+
+        # Scrubbed Evidence Preview
+        assert 'id="mod-det-evidence-container"' in html
+        assert 'id="mod-det-evidence"' in html
+        assert 'btn-evidence-preview' in html
+        assert 'View Scrubbed Image' in html
+
+        # Status Workflow Action Bar & Note
+        assert 'id="mod-workflow-section"' in html
+        assert 'Status Workflow Transition' in html
+        assert 'id="mod-status-note"' in html
+        assert 'id="mod-status-actions"' in html
+
+        # Dead Drop Message Thread
+        assert 'id="mod-thread"' in html
+        assert 'id="mod-reply-form"' in html
+        assert 'id="mod-reply-text"' in html
+        assert 'id="btn-mod-reply"' in html
+        assert 'id="mod-thread-frozen-notice"' in html
+
+        # Permanent Case Closure (ADR-0002) & Confirmation Modal
+        assert 'id="mod-close-section"' in html
+        assert 'id="mod-close-reason"' in html
+        assert 'id="btn-mod-close"' in html
+        assert 'id="mod-close-confirm-modal"' in html
+        assert 'id="btn-confirm-permanent-close"' in html
+
+        # 2. CSS Stylesheet Delivery: Drill-down layout, nav bar, and prominent back button
+        css_resp = await client.get("/static/css/styles.css")
+        assert css_resp.status_code == 200
+        css = css_resp.text
+        assert "triage-detail-pane" in css
+        assert "mod-detail-nav-bar" in css
+        assert "btn-mod-back" in css
+        assert "mod-description-box" in css
+        assert "btn-evidence-preview" in css
+        assert "frozen-thread-notice" in css
+        assert "mod-close-section" in css
+
+        # 3. Client JavaScript Delivery: View switching, back navigation, workflow, thread, closure
+        js_resp = await client.get("/static/js/dashboard.js")
+        assert js_resp.status_code == 200
+        js = js_resp.text
+        assert "viewModReport" in js
+        assert "closeModDetail" in js
+        assert "advanceStatus" in js
+        assert "sendModReply" in js
+        assert "executePermanentClosure" in js
+        assert "mod-detail-view" in js
+        assert "btn-mod-back" in js
+
+        # 4. Full Lifecycle Execution via APIs
+        # Step A: Submit report with scrubbed evidence
+        import io
+        from PIL import Image
+
+        img = Image.new("RGB", (30, 30), color="red")
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG")
+        img_bytes = buf.getvalue()
+
+        up_resp = await client.post(
+            "/api/v1/evidence/upload",
+            files={"file": ("leak.jpg", img_bytes, "image/jpeg")},
+        )
+        assert up_resp.status_code == 201
+        evidence_url = up_resp.json()["url"]
+
+        rep_resp = await client.post("/api/v1/reports", json={
+            "category": "SECURITY",
+            "description": "Critical vulnerability uncovered in backend token signing algorithm.",
+            "evidence_url": evidence_url,
+        })
+        assert rep_resp.status_code == 201
+        rep_data = rep_resp.json()
+        case_code = rep_data["case_code"]
+
+        # Step B: Moderator inspects report in details drill-down view
+        mod_list = await client.get("/api/v1/moderator/reports", headers=auth_headers)
+        assert mod_list.status_code == 200
+        target = next(r for r in mod_list.json() if r["category"] == "SECURITY" and "token signing" in r["description"])
+        report_id = target["id"]
+
+        detail_resp = await client.get(f"/api/v1/moderator/reports/{report_id}", headers=auth_headers)
+        assert detail_resp.status_code == 200
+        detail = detail_resp.json()
+        assert detail["status"] == "SUBMITTED"
+        assert detail["category"] == "SECURITY"
+        assert "Critical vulnerability" in detail["description"]
+        assert detail["evidence_url"] == evidence_url
+
+        # Step C: Status Workflow forward transition with public note
+        patch_resp = await client.patch(
+            f"/api/v1/moderator/reports/{report_id}/status",
+            headers=auth_headers,
+            json={
+                "status": "UNDER_REVIEW",
+                "status_update": "Escalated to core cryptography engineering team for urgent review.",
+            },
+        )
+        assert patch_resp.status_code == 200
+        assert patch_resp.json()["status"] == "UNDER_REVIEW"
+
+        # Verify whistleblower tracking reflects new status and public update note
+        track_resp = await client.get(f"/api/v1/reports/track/{case_code}")
+        assert track_resp.status_code == 200
+        assert track_resp.json()["status"] == "UNDER_REVIEW"
+        assert track_resp.json()["status_update"] == "Escalated to core cryptography engineering team for urgent review."
+
+        # Step D: Bi-directional Dead Drop messaging
+        # Moderator sends inquiry
+        mod_msg_resp = await client.post(
+            f"/api/v1/moderator/reports/{report_id}/messages",
+            headers=auth_headers,
+            json={"content": "Can you provide the specific commit hash where this was introduced?"},
+        )
+        assert mod_msg_resp.status_code == 201
+        assert mod_msg_resp.json()["sender_role"] == "MODERATOR"
+
+        # Whistleblower replies via Case Code
+        rep_msg_resp = await client.post(
+            f"/api/v1/reports/track/{case_code}/messages",
+            json={"content": "It was introduced in commit 8f9b2a1."},
+        )
+        assert rep_msg_resp.status_code == 201
+        assert rep_msg_resp.json()["sender_role"] == "REPORTER"
+
+        # Moderator inspects thread history
+        detail_after_msgs = await client.get(f"/api/v1/moderator/reports/{report_id}", headers=auth_headers)
+        assert detail_after_msgs.status_code == 200
+        msgs = detail_after_msgs.json()["messages"]
+        assert len(msgs) == 2
+        assert msgs[0]["content"] == "Can you provide the specific commit hash where this was introduced?"
+        assert msgs[0]["sender_role"] == "MODERATOR"
+        assert msgs[1]["content"] == "It was introduced in commit 8f9b2a1."
+        assert msgs[1]["sender_role"] == "REPORTER"
+
+        # Step E: Permanent Case Closure (ADR-0002) with closing resolution note
+        close_resp = await client.post(
+            f"/api/v1/moderator/reports/{report_id}/close",
+            headers=auth_headers,
+            json={"status_note": "Cryptographic flaw patched and verified; report permanently closed."},
+        )
+        assert close_resp.status_code == 200
+        closed_data = close_resp.json()
+        assert closed_data["status"] == "PERMANENTLY_CLOSED"
+        # Verify Redaction Marker
+        assert closed_data["description"] == "[REDACTED - CASE PERMANENTLY CLOSED]"
+        # Verify evidence unlinked
+        assert closed_data["evidence_url"] is None
+
+        # Verify evidence file physically shredded from disk
+        saved_filename = evidence_url.split("/")[-1]
+        saved_file_path = tmp_path / saved_filename
+        assert not saved_file_path.exists()
+
+        # Step F: Verify Dead Drop thread is frozen against all future writes
+        mod_fail_msg = await client.post(
+            f"/api/v1/moderator/reports/{report_id}/messages",
+            headers=auth_headers,
+            json={"content": "Trying to message on closed report."},
+        )
+        assert mod_fail_msg.status_code == 400
+        assert "closed" in mod_fail_msg.json()["detail"].lower()
+
+        rep_fail_msg = await client.post(
+            f"/api/v1/reports/track/{case_code}/messages",
+            json={"content": "Whistleblower trying to reply on closed report."},
+        )
+        assert rep_fail_msg.status_code == 400
+        assert "closed" in rep_fail_msg.json()["detail"].lower()
+
+        # Step G: Whistleblower tracking verifies frozen closed state
+        final_track = await client.get(f"/api/v1/reports/track/{case_code}")
+        assert final_track.status_code == 200
+        assert final_track.json()["status"] == "PERMANENTLY_CLOSED"
+        assert final_track.json()["status_update"] == "Cryptographic flaw patched and verified; report permanently closed."
+
+        # Step H: Moderator details drill-down verification of closed state (ADR-0002)
+        final_mod_detail = await client.get(f"/api/v1/moderator/reports/{report_id}", headers=auth_headers)
+        assert final_mod_detail.status_code == 200
+        assert final_mod_detail.json()["status"] == "PERMANENTLY_CLOSED"
+        assert final_mod_detail.json()["description"] == "[REDACTED - CASE PERMANENTLY CLOSED]"
+        assert final_mod_detail.json()["evidence_url"] is None
+
+
 
 
 
