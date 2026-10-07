@@ -363,3 +363,110 @@ class TestEndToEndSmoke:
         assert "modLogout" in js
         assert "Escape" in js
 
+    async def test_whistleblower_public_interface_submit_and_track(self, client):
+        """Ticket 3 acceptance criteria:
+        - Public tab navigation styled as a sleek two-segment control ("Submit Report" and "Track Report")
+        - Anonymous submission form features polished inputs, category dropdown, and file upload zone highlighting in-memory EXIF scrubbing
+        - Successful submission renders a high-visibility zero-knowledge Case Code card with one-click copy and direct "Track This Case Now" action
+        - Tracking view presents current status badge, category chip, and public moderator update callout
+        - Dead Drop message feed styled with clean message bubbles distinguishing moderator messages from reporter replies
+        - Permanent closure notice clearly indicates frozen thread state when report status is PERMANENTLY_CLOSED
+        - All automated tests continue to pass
+        """
+        resp = await client.get("/")
+        assert resp.status_code == 200
+        html = resp.text
+
+        # 1. Zero external scripts or styles
+        assert "<script src=\"http" not in html
+        assert "<link rel=\"stylesheet\" href=\"http" not in html
+
+        # 2. Public tab navigation styled as a sleek two-segment control
+        tabs_start = html.find('id="public-tabs"')
+        assert tabs_start != -1, "Missing public-tabs container"
+        tabs_tag_end = html.find('>', tabs_start)
+        tabs_tag = html[tabs_start:tabs_tag_end]
+        assert "segmented-control" in tabs_tag or "tabs" in tabs_tag
+        assert 'role="tablist"' in html
+
+        # Two segment buttons: Submit and Track
+        assert 'id="tab-btn-submit"' in html
+        assert 'id="tab-btn-track"' in html
+        assert 'role="tab"' in html
+        assert 'aria-selected="true"' in html
+        assert 'aria-selected="false"' in html
+        assert "Submit Report" in html
+        assert "Track Report" in html
+
+        # 3. Anonymous submission form and scrubbed evidence dropzone
+        assert 'id="submit-form"' in html
+        assert 'id="submit-category"' in html
+        assert 'id="submit-desc"' in html
+        assert 'id="submit-evidence"' in html
+        assert 'id="evidence-dropzone"' in html
+        assert "In-Memory EXIF Scrubbing" in html
+        assert 'id="btn-submit"' in html
+        assert 'id="submit-error"' in html
+
+        # 4. High-visibility zero-knowledge Case Code reveal card
+        assert 'id="success-card"' in html
+        assert 'id="success-case-code"' in html
+        assert 'id="btn-copy-code"' in html
+        assert "copyCaseCode" in html
+        assert 'id="btn-track-submitted-case"' in html
+        assert "trackCaseFromSuccess" in html
+        assert "Zero-Knowledge" in html or "zero-knowledge" in html.lower()
+
+        # 5. Tracking view components
+        assert 'id="track-search-card"' in html
+        assert 'id="track-form"' in html
+        assert 'id="track-code"' in html
+        assert 'id="btn-track"' in html
+        assert 'id="track-result-card"' in html
+        assert 'id="track-status"' in html
+        assert 'id="track-category"' in html
+        assert 'id="track-display-code"' in html
+        assert 'id="track-stepper"' in html
+        assert 'id="track-note-container"' in html
+        assert 'id="track-note"' in html
+
+        # 6. Dead Drop message thread components
+        assert 'id="track-thread"' in html
+        assert 'id="track-reply-form"' in html
+        assert 'id="track-reply-text"' in html
+        assert 'id="btn-track-reply"' in html
+        assert 'id="track-reply-error"' in html
+
+        # 7. Permanent closure frozen notice
+        assert 'id="track-closed-notice"' in html
+        assert "permanently closed" in html.lower()
+        assert "frozen" in html.lower()
+
+        # 8. CSS styling verification
+        css_resp = await client.get("/static/css/styles.css")
+        assert css_resp.status_code == 200
+        css = css_resp.text
+        assert "public-tab-control" in css
+        assert "dropzone" in css
+        assert "dropzone-scrub-badge" in css or "dropzone-scrub-banner" in css or "dropzone-scrub-notice" in css
+        assert "case-code-card" in css or "case-code-box" in css
+        assert "msg-reporter" in css
+        assert "msg-moderator" in css
+        assert "frozen-thread-notice" in css or "warning-box" in css
+        assert "moderator-update-callout" in css or "track-note-container" in css
+        assert "workflow-stepper" in css
+
+        # 9. JavaScript functions verification
+        js_resp = await client.get("/static/js/dashboard.js")
+        assert js_resp.status_code == 200
+        js = js_resp.text
+        assert "handleFileSelection" in js
+        assert "clearEvidenceFile" in js
+        assert "updateWorkflowStepper" in js
+        assert "trackCaseFromSuccess" in js
+        assert "copyCaseCode" in js
+        assert "submitReport" in js
+        assert "trackReport" in js
+        assert "renderThread" in js
+
+
