@@ -123,15 +123,79 @@ function handleModalOverlayClick(e) {
     }
 }
 
+// --- Permanent Case Closure Modal Management (ADR-0002) ---
+function openClosureModal() {
+    if (!modToken || !currentModReportId) return;
+    clearError('mod-close-error');
+    clearError('mod-modal-close-error');
+    const modal = document.getElementById('mod-close-confirm-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeClosureModal() {
+    const modal = document.getElementById('mod-close-confirm-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    clearError('mod-close-error');
+    clearError('mod-modal-close-error');
+}
+
+function handleClosureModalOverlayClick(e) {
+    if (e.target && e.target.id === 'mod-close-confirm-modal') {
+        closeClosureModal();
+    }
+}
+
 // Global Escape key listener for accessible modal dismissal
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-        const modal = document.getElementById('mod-login-modal');
-        if (modal && !modal.classList.contains('hidden')) {
+        const loginModal = document.getElementById('mod-login-modal');
+        if (loginModal && !loginModal.classList.contains('hidden')) {
             closeLoginModal();
+        }
+        const closureModal = document.getElementById('mod-close-confirm-modal');
+        if (closureModal && !closureModal.classList.contains('hidden')) {
+            closeClosureModal();
         }
     }
 });
+
+// --- Relative Time & String Escaping Utility Helpers ---
+function formatRelativeTime(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    if (diffMs < 0) return 'just now';
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHours = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSec < 45) return 'just now';
+    if (diffSec < 90) return '1 min ago';
+    if (diffMin < 60) return diffMin + ' mins ago';
+    if (diffHours === 1) return '1 hour ago';
+    if (diffHours < 24) return diffHours + ' hours ago';
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 30) return diffDays + ' days ago';
+    return date.toLocaleDateString();
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 // --- Workspace Navigation (Segmented Toggle) ---
 function switchWorkspace(view) {
@@ -141,8 +205,10 @@ function switchWorkspace(view) {
     const publicTabs = document.getElementById('public-tabs');
     const tabMod = document.getElementById('tab-mod');
     const modDashboard = document.getElementById('mod-dashboard');
+    const container = document.querySelector('.container');
 
     if (view === 'triage') {
+        if (container) container.classList.add('triage-mode');
         if (btnWhistleblower) {
             btnWhistleblower.classList.remove('active');
             btnWhistleblower.setAttribute('aria-selected', 'false');
@@ -162,11 +228,20 @@ function switchWorkspace(view) {
         if (tabMod) tabMod.classList.add('active');
         if (modDashboard) modDashboard.classList.remove('hidden');
 
+        // Ensure detail inspector displays empty state if no report is selected
+        if (!currentModReportId) {
+            const emptyEl = document.getElementById('mod-detail-empty');
+            const contentEl = document.getElementById('mod-detail-content');
+            if (emptyEl) emptyEl.classList.remove('hidden');
+            if (contentEl) contentEl.classList.add('hidden');
+        }
+
         if (modToken) {
             fetchModReports();
         }
     } else {
         // Whistleblower view
+        if (container) container.classList.remove('triage-mode');
         if (btnTriage) {
             btnTriage.classList.remove('active');
             btnTriage.setAttribute('aria-selected', 'false');
@@ -700,6 +775,11 @@ function modLogout() {
     currentModReportId = null;
     currentModReport = null;
 
+    closeClosureModal();
+
+    const container = document.querySelector('.container');
+    if (container) container.classList.remove('triage-mode');
+
     // Reset header state: show unauth button, hide auth controls
     const unauthActions = document.getElementById('unauth-header-actions');
     const authActions = document.getElementById('auth-header-actions');
@@ -721,12 +801,7 @@ function modLogout() {
     // Reset moderator views
     const tabMod = document.getElementById('tab-mod');
     if (tabMod) tabMod.classList.remove('active');
-    const modDashboard = document.getElementById('mod-dashboard');
-    const modDetail = document.getElementById('mod-detail-view');
-    const modList = document.getElementById('mod-list-view');
-    if (modDashboard) modDashboard.classList.add('hidden');
-    if (modDetail) modDetail.classList.add('hidden');
-    if (modList) modList.classList.remove('hidden');
+    closeModDetail();
 
     clearError('mod-login-error');
 
@@ -741,8 +816,10 @@ async function fetchModReports() {
     if (!modToken) return;
     clearError('mod-list-error');
 
-    const status = document.getElementById('mod-filter-status').value;
-    const category = document.getElementById('mod-filter-category').value;
+    const statusFilter = document.getElementById('mod-filter-status');
+    const categoryFilter = document.getElementById('mod-filter-category');
+    const status = statusFilter ? statusFilter.value : '';
+    const category = categoryFilter ? categoryFilter.value : '';
 
     let url = '/api/v1/moderator/reports?limit=100';
     if (status) url += '&status=' + encodeURIComponent(status);
@@ -761,31 +838,49 @@ async function fetchModReports() {
 
         const reports = await res.json();
         const list = document.getElementById('mod-report-list');
+        const countBadge = document.getElementById('mod-queue-count');
+        if (countBadge) countBadge.textContent = String(reports.length);
+
+        if (!list) return;
         list.innerHTML = '';
 
         if (reports.length === 0) {
-            list.innerHTML = '<li class="report-item text-center" style="color: var(--muted-foreground); padding: 24px;">No reports found matching criteria.</li>';
+            list.innerHTML = `
+                <li class="triage-queue-empty">
+                    ${getIcon('search', 'icon icon-lg')}
+                    <p>No reports found matching criteria.</p>
+                </li>
+            `;
+            if (currentModReportId) {
+                closeModDetail();
+            }
             return;
         }
 
         reports.forEach(r => {
             const li = document.createElement('li');
-            li.className = 'report-item';
+            const isActive = currentModReportId === r.id;
+            li.className = 'report-item' + (isActive ? ' active' : '');
+            li.dataset.id = String(r.id);
+            li.setAttribute('role', 'option');
+            li.setAttribute('aria-selected', isActive ? 'true' : 'false');
             li.onclick = () => viewModReport(r.id);
 
-            const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
+            const relTime = r.created_at ? formatRelativeTime(r.created_at) : '';
+            const fullDate = r.created_at ? new Date(r.created_at).toLocaleString() : '';
 
             li.innerHTML = `
-                <div>
-                    <div class="report-item-title">
-                        <span>Report #${r.id}</span>
+                <div class="report-item-header">
+                    <div class="report-item-title-row">
+                        <span class="report-item-id">Report #${r.id}</span>
                         <span class="cat-badge">${r.category}</span>
-                        <span style="font-size: 0.75rem; color: var(--muted-foreground);">${dateStr}</span>
                     </div>
-                    <div class="report-item-desc">${r.description}</div>
+                    <span class="report-item-time" title="${fullDate}">${relTime}</span>
                 </div>
-                <div>
+                <div class="report-item-desc">${escapeHtml(r.description)}</div>
+                <div class="report-item-footer">
                     <span class="badge ${r.status}">${r.status.replace(/_/g, ' ')}</span>
+                    ${r.evidence_url ? `<span class="report-has-evidence" title="Has scrubbed evidence">${getIcon('fileText', 'icon icon-xs')} Evidence</span>` : ''}
                 </div>
             `;
             list.appendChild(li);
@@ -817,10 +912,31 @@ async function viewModReport(reportId) {
         currentModReportId = reportId;
         currentModReport = data;
 
+        // Update active highlight in queue list
+        document.querySelectorAll('#mod-report-list .report-item').forEach(item => {
+            if (parseInt(item.dataset.id, 10) === reportId) {
+                item.classList.add('active');
+                item.setAttribute('aria-selected', 'true');
+            } else {
+                item.classList.remove('active');
+                item.setAttribute('aria-selected', 'false');
+            }
+        });
+
+        // Hide empty state, show detail content
+        const emptyEl = document.getElementById('mod-detail-empty');
+        const contentEl = document.getElementById('mod-detail-content');
+        if (emptyEl) emptyEl.classList.add('hidden');
+        if (contentEl) contentEl.classList.remove('hidden');
+
         // Populate Details
         document.getElementById('mod-detail-heading').textContent = 'Report #' + data.id;
         document.getElementById('mod-det-id').textContent = '#' + data.id;
-        document.getElementById('mod-det-created').textContent = data.created_at ? new Date(data.created_at).toLocaleString() : 'N/A';
+
+        const dateStr = data.created_at ? new Date(data.created_at).toLocaleString() : 'N/A';
+        const relStr = data.created_at ? formatRelativeTime(data.created_at) : '';
+        document.getElementById('mod-det-created').textContent = relStr ? `${dateStr} (${relStr})` : dateStr;
+
         document.getElementById('mod-det-cat').textContent = data.category;
 
         const badge = document.getElementById('mod-det-status');
@@ -862,37 +978,52 @@ async function viewModReport(reportId) {
             // Render forward transitions based on state machine
             if (data.status === 'SUBMITTED') {
                 actions.innerHTML = `
-                    <button class="btn btn-blue" onclick="advanceStatus('UNDER_REVIEW')">Move to Under Review</button>
-                    <button class="btn btn-outline" onclick="advanceStatus('DISMISSED')">Dismiss Report</button>
+                    <button type="button" class="btn btn-primary" onclick="advanceStatus('UNDER_REVIEW')">
+                        ${getIcon('search', 'icon icon-xs')} Move to Under Review
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="advanceStatus('DISMISSED')">
+                        ${getIcon('x', 'icon icon-xs')} Dismiss Report
+                    </button>
                 `;
             } else if (data.status === 'UNDER_REVIEW') {
                 actions.innerHTML = `
-                    <button class="btn btn-primary" onclick="advanceStatus('RESOLVED')">Mark as Resolved</button>
-                    <button class="btn btn-outline" onclick="advanceStatus('DISMISSED')">Dismiss Report</button>
+                    <button type="button" class="btn btn-primary" onclick="advanceStatus('RESOLVED')">
+                        ${getIcon('check', 'icon icon-xs')} Mark as Resolved
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="advanceStatus('DISMISSED')">
+                        ${getIcon('x', 'icon icon-xs')} Dismiss Report
+                    </button>
                 `;
             } else {
-                actions.innerHTML = '<span style="color: var(--muted-foreground); font-size: 0.85rem;">No further forward workflow transitions available. Use Permanent Closure below to archive.</span>';
+                actions.innerHTML = `<span class="workflow-terminal-notice">${getIcon('info', 'icon icon-xs')} No further forward workflow transitions available. Use Permanent Case Closure below to finalize and shred evidence.</span>`;
             }
         }
 
         // Render Thread
         renderThread('mod-thread', data.messages);
 
-        // Switch views
-        document.getElementById('mod-list-view').classList.add('hidden');
-        document.getElementById('mod-detail-view').classList.remove('hidden');
+        // Ensure detail view is visible
+        const detailView = document.getElementById('mod-detail-view');
+        if (detailView) detailView.classList.remove('hidden');
 
     } catch (err) {
-        alert('Error loading report: ' + err.message);
+        showToast('Error', 'Failed to load report: ' + err.message, 'error');
     }
 }
 
 function closeModDetail() {
     currentModReportId = null;
     currentModReport = null;
-    document.getElementById('mod-detail-view').classList.add('hidden');
-    document.getElementById('mod-list-view').classList.remove('hidden');
-    fetchModReports();
+
+    document.querySelectorAll('#mod-report-list .report-item').forEach(item => {
+        item.classList.remove('active');
+        item.setAttribute('aria-selected', 'false');
+    });
+
+    const emptyEl = document.getElementById('mod-detail-empty');
+    const contentEl = document.getElementById('mod-detail-content');
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    if (contentEl) contentEl.classList.add('hidden');
 }
 
 async function advanceStatus(targetStatus) {
@@ -900,7 +1031,7 @@ async function advanceStatus(targetStatus) {
     clearError('mod-status-error');
 
     const noteInput = document.getElementById('mod-status-note');
-    const statusUpdate = noteInput.value.trim();
+    const statusUpdate = noteInput ? noteInput.value.trim() : '';
 
     const payload = { status: targetStatus };
     if (statusUpdate) payload.status_update = statusUpdate;
@@ -921,8 +1052,11 @@ async function advanceStatus(targetStatus) {
             throw new Error(errData.detail || 'Status transition failed.');
         }
 
-        noteInput.value = '';
+        if (noteInput) noteInput.value = '';
+        showToast('Status Updated', `Report #${currentModReportId} advanced to ${targetStatus.replace(/_/g, ' ')}.`, 'success');
+
         await viewModReport(currentModReportId);
+        await fetchModReports();
 
     } catch (err) {
         showError('mod-status-error', err.message);
@@ -934,11 +1068,11 @@ async function sendModReply(e) {
     if (!modToken || !currentModReportId) return;
 
     const textInput = document.getElementById('mod-reply-text');
-    const content = textInput.value.trim();
+    const content = textInput ? textInput.value.trim() : '';
     if (!content) return;
 
     clearError('mod-reply-error');
-    setBtnLoading('btn-mod-reply', true, 'Send Dead Drop Message');
+    setBtnLoading('btn-mod-reply', true, 'Sending...');
 
     try {
         const res = await fetch('/api/v1/moderator/reports/' + currentModReportId + '/messages', {
@@ -957,6 +1091,7 @@ async function sendModReply(e) {
         }
 
         textInput.value = '';
+        showToast('Message Sent', 'Dead Drop reply posted to whistleblower.', 'success');
         await viewModReport(currentModReportId);
 
     } catch (err) {
@@ -967,24 +1102,20 @@ async function sendModReply(e) {
 }
 
 async function triggerPermanentClosure() {
+    openClosureModal();
+}
+
+async function executePermanentClosure() {
     if (!modToken || !currentModReportId) return;
     clearError('mod-close-error');
+    clearError('mod-modal-close-error');
 
-    const confirmed = confirm(
-        '⚠️ PERMANENT CLOSURE WARNING (ADR-0002):\n\n' +
-        'This action is IRREVERSIBLE.\n\n' +
-        '1. The report description will be overwritten with [REDACTED - CASE PERMANENTLY CLOSED].\n' +
-        '2. Any attached evidence files will be permanently shredded from disk.\n' +
-        '3. The Dead Drop thread will be permanently frozen against further messages.\n\n' +
-        'Are you sure you want to proceed?'
-    );
-
-    if (!confirmed) return;
-
-    const reason = document.getElementById('mod-close-reason').value.trim();
+    const reasonInput = document.getElementById('mod-close-reason');
+    const reason = reasonInput ? reasonInput.value.trim() : '';
     const payload = reason ? { status_note: reason } : {};
 
-    setBtnLoading('btn-mod-close', true, 'Closing...');
+    setBtnLoading('btn-confirm-permanent-close', true, 'Closing Case...');
+    setBtnLoading('btn-mod-close', true, 'Closing Case...');
 
     try {
         const res = await fetch('/api/v1/moderator/reports/' + currentModReportId + '/close', {
@@ -996,18 +1127,33 @@ async function triggerPermanentClosure() {
             body: JSON.stringify(payload)
         });
 
-        if (res.status === 401) return modLogout();
+        if (res.status === 401) {
+            closeClosureModal();
+            return modLogout();
+        }
         if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
             throw new Error(errData.detail || 'Permanent closure failed.');
         }
 
-        document.getElementById('mod-close-reason').value = '';
+        closeClosureModal();
+        if (reasonInput) reasonInput.value = '';
+
+        showToast(
+            'Case Permanently Closed',
+            'ADR-0002 data minimization enforced: description redacted, evidence shredded, thread frozen.',
+            'destructive',
+            6000
+        );
+
         await viewModReport(currentModReportId);
+        await fetchModReports();
 
     } catch (err) {
+        showError('mod-modal-close-error', err.message);
         showError('mod-close-error', err.message);
     } finally {
+        setBtnLoading('btn-confirm-permanent-close', false, 'Confirm Permanent Closure');
         setBtnLoading('btn-mod-close', false, 'Irreversibly Close Case');
     }
 }
@@ -1016,10 +1162,22 @@ async function triggerPermanentClosure() {
 window.openLoginModal = openLoginModal;
 window.closeLoginModal = closeLoginModal;
 window.handleModalOverlayClick = handleModalOverlayClick;
+window.openClosureModal = openClosureModal;
+window.closeClosureModal = closeClosureModal;
+window.handleClosureModalOverlayClick = handleClosureModalOverlayClick;
 window.switchWorkspace = switchWorkspace;
 window.switchTab = switchTab;
 window.modLogin = modLogin;
 window.modLogout = modLogout;
+window.fetchModReports = fetchModReports;
+window.viewModReport = viewModReport;
+window.closeModDetail = closeModDetail;
+window.advanceStatus = advanceStatus;
+window.sendModReply = sendModReply;
+window.triggerPermanentClosure = triggerPermanentClosure;
+window.executePermanentClosure = executePermanentClosure;
+window.formatRelativeTime = formatRelativeTime;
+window.escapeHtml = escapeHtml;
 window.handleFileSelection = handleFileSelection;
 window.clearEvidenceFile = clearEvidenceFile;
 window.updateWorkflowStepper = updateWorkflowStepper;

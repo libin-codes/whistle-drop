@@ -469,4 +469,125 @@ class TestEndToEndSmoke:
         assert "trackReport" in js
         assert "renderThread" in js
 
+    async def test_moderator_triage_workspace_master_detail(self, client):
+        """Ticket 4 acceptance criteria:
+        - Master-detail split layout renders with left queue list and right detail inspector
+        - Queue header features status filter, category filter, and manual refresh button
+        - Selecting a queue item displays full report metadata, category, status, and scrubbed evidence image link
+        - Dynamic Status Workflow action buttons rendered based on current report lifecycle state
+        - Public status update note submitted alongside state transition
+        - Dead Drop thread displays bi-directional message history with message posting form
+        - Irreversible Permanent Case Closure section enforces data minimization (informing user of redaction marker and evidence shredding) with confirmation
+        - Thread is permanently frozen against new messages once closed
+        - All automated tests continue to pass
+        """
+        resp = await client.get("/")
+        assert resp.status_code == 200
+        html = resp.text
+
+        # 1. Zero external scripts or styles
+        assert "<script src=\"http" not in html
+        assert "<link rel=\"stylesheet\" href=\"http" not in html
+
+        # 2. Master-detail split layout structure
+        assert 'id="tab-mod"' in html
+        assert 'id="mod-dashboard"' in html
+        assert 'triage-workspace' in html
+        assert 'id="mod-list-view"' in html
+        assert 'triage-queue-pane' in html
+        assert 'id="mod-detail-view"' in html
+        assert 'triage-detail-pane' in html
+        assert 'id="mod-detail-empty"' in html
+        assert 'id="mod-detail-content"' in html
+
+        # 3. Queue header controls: status filter, category filter, refresh button, queue counter
+        assert 'id="mod-filter-status"' in html
+        assert 'id="mod-filter-category"' in html
+        assert 'id="btn-mod-refresh"' in html
+        assert 'fetchModReports' in html
+        assert 'id="mod-queue-count"' in html
+        assert 'id="mod-report-list"' in html
+        assert 'id="mod-list-error"' in html
+
+        # 4. Detail inspector metadata, description, and scrubbed evidence preview link
+        assert 'id="mod-detail-heading"' in html
+        assert 'id="mod-det-id"' in html
+        assert 'id="mod-det-created"' in html
+        assert 'id="mod-det-status"' in html
+        assert 'id="mod-det-cat"' in html
+        assert 'id="mod-det-desc"' in html
+        assert 'id="mod-det-evidence-container"' in html
+        assert 'id="mod-det-evidence"' in html
+        assert "View Scrubbed Image" in html
+        assert 'id="btn-mod-close-detail"' in html
+        assert "closeModDetail" in html
+
+        # 5. Dynamic Status Workflow transition action bar & public update note
+        assert 'id="mod-workflow-section"' in html
+        assert 'id="mod-status-note"' in html
+        assert 'id="mod-status-actions"' in html
+        assert 'id="mod-status-error"' in html
+
+        # 6. Dead Drop thread feed & message posting form
+        assert 'id="mod-thread"' in html
+        assert 'id="mod-reply-form"' in html
+        assert 'id="mod-reply-text"' in html
+        assert 'id="btn-mod-reply"' in html
+        assert 'id="mod-reply-error"' in html
+        assert 'id="mod-thread-frozen-notice"' in html
+
+        # 7. Irreversible Permanent Case Closure section (ADR-0002)
+        assert 'id="mod-close-section"' in html
+        assert 'id="mod-close-reason"' in html
+        assert 'id="btn-mod-close"' in html
+        assert 'triggerPermanentClosure' in html
+        assert 'id="mod-close-error"' in html
+        assert "Permanent Case Closure" in html
+        assert "Data Minimization" in html
+        assert "ADR-0002" in html
+
+        # 8. Accessible confirmation dialog modal for Permanent Closure (ADR-0002)
+        assert 'id="mod-close-confirm-modal"' in html
+        assert 'role="dialog"' in html
+        assert 'aria-modal="true"' in html
+        assert 'id="mod-close-modal-title"' in html
+        assert 'id="btn-confirm-permanent-close"' in html
+        assert 'executePermanentClosure' in html
+        assert 'closeClosureModal' in html
+        assert "Redaction Marker" in html
+        assert "[REDACTED - CASE PERMANENTLY CLOSED]" in html
+        assert "Evidence Shredding" in html
+
+        # 9. CSS styles verification
+        css_resp = await client.get("/static/css/styles.css")
+        assert css_resp.status_code == 200
+        css = css_resp.text
+        assert "triage-workspace" in css
+        assert "triage-queue-pane" in css
+        assert "triage-detail-pane" in css
+        assert "triage-empty-detail" in css
+        assert "triage-mode" in css
+        assert "report-item" in css
+        assert "report-has-evidence" in css
+        assert "mod-close-section" in css
+        assert "dialog-destructive-badge" in css
+        assert "closure-consequences-list" in css
+
+        # 10. JavaScript functions verification
+        js_resp = await client.get("/static/js/dashboard.js")
+        assert js_resp.status_code == 200
+        js = js_resp.text
+        assert "fetchModReports" in js
+        assert "viewModReport" in js
+        assert "closeModDetail" in js
+        assert "advanceStatus" in js
+        assert "sendModReply" in js
+        assert "triggerPermanentClosure" in js
+        assert "openClosureModal" in js
+        assert "closeClosureModal" in js
+        assert "executePermanentClosure" in js
+        assert "formatRelativeTime" in js
+        assert "escapeHtml" in js
+
+
 

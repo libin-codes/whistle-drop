@@ -69,6 +69,11 @@ body {
     max-width: 880px;
     margin: 0 auto;
     padding: var(--spacing-lg) var(--spacing-md);
+    transition: max-width 0.2s ease;
+}
+
+.container.triage-mode {
+    max-width: 1280px;
 }
 
 /* Header & Navigation Layout */
@@ -1425,26 +1430,104 @@ textarea {
     line-height: 1.5;
 }
 
-/* Moderator Portal & Queue Layout */
-.mod-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-md);
-    flex-wrap: wrap;
-    gap: 10px;
+/* Moderator Portal & Master-Detail Triage Workspace */
+.triage-workspace {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: var(--spacing-md);
+    align-items: start;
+    min-height: 620px;
 }
 
+/* Left Pane: Triage Queue */
+.triage-queue-pane {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 150px);
+    min-height: 600px;
+    overflow: hidden;
+    padding: var(--spacing-md);
+}
+
+.triage-pane-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.triage-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.triage-title-row h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.mod-user-indicator {
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+    display: block;
+    margin-top: 2px;
+}
+
+.triage-pane-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.triage-filters,
 .filters {
     display: flex;
     gap: var(--spacing-sm);
+    margin-bottom: 12px;
     flex-wrap: wrap;
 }
 
+.triage-filters select,
 .filters select {
-    width: auto;
-    padding: 6px 12px;
+    flex: 1 1 140px;
+    min-width: 130px;
+    padding: 6px 10px;
     font-size: 0.8125rem;
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--foreground);
+}
+
+.triage-queue-scroll {
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 4px;
+    margin-top: 4px;
+}
+
+.triage-queue-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px;
+    color: var(--muted-foreground);
+    text-align: center;
+    gap: 8px;
+}
+
+.triage-queue-empty .icon {
+    opacity: 0.5;
+}
+
+.triage-queue-empty p {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
 }
 
 .report-list {
@@ -1455,15 +1538,16 @@ textarea {
 }
 
 .report-item {
-    padding: 12px var(--spacing-md);
+    padding: 12px 14px;
     background: var(--background);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     cursor: pointer;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.15s ease;
+    user-select: none;
 }
 
 .report-item:hover {
@@ -1471,30 +1555,140 @@ textarea {
     background-color: #18181b;
 }
 
-.report-item-title {
-    font-weight: 500;
-    color: var(--foreground);
+.report-item.active {
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.08);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
+}
+
+.report-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-item-title-row {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
+}
+
+.report-item-id {
+    font-weight: 600;
     font-size: 0.875rem;
+    color: var(--foreground);
+}
+
+.report-item-time {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    white-space: nowrap;
 }
 
 .report-item-desc {
     font-size: 0.8125rem;
     color: var(--muted-foreground);
-    margin-top: 4px;
-    max-width: 520px;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.4;
+    word-break: break-word;
 }
 
-.action-buttons {
+.report-item-footer {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
     gap: 8px;
+    margin-top: 2px;
+}
+
+.report-has-evidence {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: #93c5fd;
+}
+
+/* Right Pane: Detail Inspector */
+.triage-detail-pane {
+    min-height: 600px;
+    padding: var(--spacing-md);
+}
+
+.triage-empty-detail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 72px 24px;
+    color: var(--muted-foreground);
+    gap: 12px;
+    min-height: 500px;
+}
+
+.triage-empty-detail .empty-icon-wrap {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--muted);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+    margin-bottom: 8px;
+}
+
+.triage-empty-detail h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.triage-empty-detail p {
+    font-size: 0.875rem;
+    max-width: 400px;
+    line-height: 1.5;
+}
+
+.mod-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
     flex-wrap: wrap;
-    margin-top: var(--spacing-sm);
+    gap: 10px;
+}
+
+.mod-detail-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.mod-detail-title-group h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.mod-detail-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mod-detail-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .detail-grid {
@@ -1506,6 +1700,169 @@ textarea {
     border-radius: var(--radius);
     border: 1px solid var(--border);
     margin-bottom: var(--spacing-md);
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    display: block;
+}
+
+.detail-val {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-top: 2px;
+}
+
+.mod-description-box {
+    white-space: pre-wrap;
+    background: var(--background);
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--foreground);
+    word-break: break-word;
+}
+
+.btn-evidence-preview {
+    color: #60a5fa;
+    border-color: rgba(96, 165, 250, 0.4);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-evidence-preview:hover {
+    background-color: rgba(96, 165, 250, 0.1);
+    color: #93c5fd;
+}
+
+.triage-section {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+}
+
+.section-heading-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.section-subtitle {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    font-weight: 500;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: var(--spacing-sm);
+}
+
+.workflow-terminal-notice {
+    color: var(--muted-foreground);
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--muted);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+/* Permanent Closure Section & Confirmation Modal (ADR-0002) */
+.mod-close-section {
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: var(--radius);
+    background: rgba(239, 68, 68, 0.04);
+    padding: 16px;
+}
+
+.closure-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #f87171;
+    margin-bottom: 8px;
+}
+
+.closure-header h4 {
+    margin-bottom: 0;
+    color: #f87171;
+}
+
+.closure-explanation {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+.dialog-destructive-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f87171;
+    margin-bottom: 12px;
+}
+
+.closure-modal-body {
+    margin: 16px 0;
+}
+
+.closure-consequences-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.closure-consequences-list li {
+    font-size: 0.85rem;
+    color: var(--foreground);
+    background: var(--secondary);
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    border-left: 3px solid var(--destructive);
+    line-height: 1.4;
+}
+
+.closure-consequences-list code {
+    background: #09090b;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #fca5a5;
+    font-family: monospace;
+}
+
+@media (max-width: 960px) {
+    .triage-workspace {
+        grid-template-columns: 1fr;
+    }
+    .triage-queue-pane {
+        max-height: 480px;
+        min-height: 380px;
+    }
 }
 
 @media (max-width: 600px) {

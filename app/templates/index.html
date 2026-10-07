@@ -305,29 +305,28 @@
 
     <!-- TAB 3: MODERATOR PORTAL / TRIAGE WORKSPACE -->
     <div id="tab-mod" class="tab-content">
-        <!-- Authenticated Dashboard -->
-        <div id="mod-dashboard">
-            <!-- List View -->
-            <div class="card" id="mod-list-view">
-                <div class="mod-header">
+        <!-- Authenticated Master-Detail Triage Workspace -->
+        <div id="mod-dashboard" class="triage-workspace">
+            <!-- Left Pane: Triage Queue List -->
+            <div class="card triage-queue-pane" id="mod-list-view">
+                <div class="triage-pane-header">
                     <div>
-                        <h2>Triage Queue</h2>
-                        <span id="mod-current-user" style="font-size: 0.85rem; color: var(--muted-foreground);"></span>
+                        <div class="triage-title-row">
+                            <h2>Triage Queue</h2>
+                            <span id="mod-queue-count" class="badge">0</span>
+                        </div>
+                        <span id="mod-current-user" class="mod-user-indicator"></span>
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn btn-outline" onclick="fetchModReports()">
+                    <div class="triage-pane-actions">
+                        <button type="button" class="btn btn-outline btn-sm" id="btn-mod-refresh" onclick="fetchModReports()" title="Refresh Queue">
                             <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
                             Refresh
-                        </button>
-                        <button class="btn btn-outline" onclick="modLogout()">
-                            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-                            Logout
                         </button>
                     </div>
                 </div>
 
-                <div class="filters" style="margin-bottom: 16px;">
-                    <select id="mod-filter-status" onchange="fetchModReports()">
+                <div class="triage-filters" id="mod-filters">
+                    <select id="mod-filter-status" onchange="fetchModReports()" aria-label="Filter by Status">
                         <option value="">All Statuses</option>
                         <option value="SUBMITTED">Submitted</option>
                         <option value="UNDER_REVIEW">Under Review</option>
@@ -336,7 +335,7 @@
                         <option value="PERMANENTLY_CLOSED">Permanently Closed</option>
                     </select>
 
-                    <select id="mod-filter-category" onchange="fetchModReports()">
+                    <select id="mod-filter-category" onchange="fetchModReports()" aria-label="Filter by Category">
                         <option value="">All Categories</option>
                         <option value="SECURITY">Security</option>
                         <option value="HARASSMENT">Harassment</option>
@@ -346,103 +345,141 @@
                     </select>
                 </div>
 
-                <ul class="report-list" id="mod-report-list">
-                    <!-- Populated dynamically -->
-                </ul>
+                <div class="triage-queue-scroll">
+                    <ul class="report-list" id="mod-report-list" role="listbox" aria-label="Reports Queue">
+                        <!-- Populated dynamically -->
+                    </ul>
+                </div>
                 <div id="mod-list-error" class="error-message hidden"></div>
             </div>
 
-            <!-- Detail View -->
-            <div class="card hidden" id="mod-detail-view">
-                <div class="mod-header">
-                    <div>
-                        <h2 id="mod-detail-heading">Report Details</h2>
-                        <span id="mod-det-cat" class="cat-badge"></span>
-                        <span id="mod-det-status" class="badge"></span>
+            <!-- Right Pane: Detail Inspector -->
+            <div class="card triage-detail-pane" id="mod-detail-view">
+                <!-- Empty State (No Report Selected) -->
+                <div id="mod-detail-empty" class="triage-empty-detail">
+                    <div class="empty-icon-wrap">
+                        <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
                     </div>
-                    <button class="btn btn-outline" onclick="closeModDetail()">
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-                        Back to Queue
-                    </button>
+                    <h3>Select a Report to Triage</h3>
+                    <p>Select an incoming report from the queue to inspect full metadata, advance the forward-only Status Workflow, communicate anonymously via Dead Drop, or permanently close the case.</p>
                 </div>
 
-                <div class="detail-grid">
-                    <div>
-                        <span style="font-size: 0.75rem; color: var(--muted-foreground); text-transform: uppercase;">Report ID</span>
-                        <div id="mod-det-id" style="font-weight: 600;"></div>
-                    </div>
-                    <div>
-                        <span style="font-size: 0.75rem; color: var(--muted-foreground); text-transform: uppercase;">Submitted At</span>
-                        <div id="mod-det-created" style="font-size: 0.9rem;"></div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Description</label>
-                    <div id="mod-det-desc" style="white-space: pre-wrap; background: var(--background); padding: 12px; border-radius: var(--radius); border: 1px solid var(--border); font-size: 0.9rem;"></div>
-                </div>
-
-                <div id="mod-det-evidence-container" class="form-group hidden">
-                    <label>Scrubbed Evidence File</label>
-                    <a id="mod-det-evidence" href="#" target="_blank" class="btn btn-outline" style="color: #60a5fa;">
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                        View Scrubbed Image
-                    </a>
-                </div>
-
-                <!-- Status Workflow Actions -->
-                <div id="mod-workflow-section" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
-                    <h4>Status Workflow Transition</h4>
-                    <div class="form-group">
-                        <label for="mod-status-note">Public Status Update Note (Visible to Whistleblower)</label>
-                        <input type="text" id="mod-status-note" placeholder="e.g. Assigned to senior investigator.">
-                    </div>
-                    <div class="action-buttons" id="mod-status-actions">
-                        <!-- Transition buttons dynamically rendered based on allowed state transitions -->
-                    </div>
-                    <div id="mod-status-error" class="error-message hidden"></div>
-                </div>
-
-                <!-- Dead Drop Section -->
-                <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
-                    <h4>Dead Drop Thread</h4>
-                    <div class="thread-container" id="mod-thread">
-                        <!-- Messages populated dynamically -->
-                    </div>
-
-                    <form id="mod-reply-form" onsubmit="sendModReply(event)">
-                        <div class="form-group">
-                            <label for="mod-reply-text">Post Moderator Message</label>
-                            <textarea id="mod-reply-text" required placeholder="Send inquiry or guidance to the whistleblower..." style="min-height: 80px;"></textarea>
+                <!-- Selected Report Content -->
+                <div id="mod-detail-content" class="hidden">
+                    <div class="mod-header">
+                        <div class="mod-detail-title-group">
+                            <h2 id="mod-detail-heading">Report Details</h2>
+                            <div class="mod-detail-badges">
+                                <span id="mod-det-status" class="badge"></span>
+                                <span id="mod-det-cat" class="cat-badge"></span>
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="btn-mod-reply">
-                            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                            Send Dead Drop Message
-                        </button>
-                        <div id="mod-reply-error" class="error-message hidden"></div>
-                    </form>
-                    <div id="mod-thread-frozen-notice" class="hidden warning-box">
-                        This report is permanently closed. Message posting is permanently disabled.
+                        <div class="mod-detail-header-actions">
+                            <button type="button" class="btn btn-outline btn-sm" id="btn-mod-close-detail" onclick="closeModDetail()" title="Clear Selection">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                Close Inspector
+                            </button>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Permanent Closure Section (ADR-0002) -->
-                <div id="mod-close-section" style="margin-top: 32px; padding: 16px; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: var(--radius); background: rgba(239, 68, 68, 0.05);">
-                    <h4 style="color: #f87171; display: flex; align-items: center; gap: 8px;">
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
-                        Permanent Case Closure & Data Minimization (ADR-0002)
-                    </h4>
-                    <p style="font-size: 0.85rem; color: var(--muted-foreground); margin-bottom: 12px;">
-                        Permanently close this report. This action is irreversible: it immediately overwrites the description with the standardized Redaction Marker, physically shreds all evidence files from disk, and freezes the Dead Drop thread against all future writes.
-                    </p>
-                    <div class="form-group">
-                        <input type="text" id="mod-close-reason" placeholder="Optional closing resolution note...">
+                    <div class="detail-grid">
+                        <div>
+                            <span class="detail-label">Report ID</span>
+                            <div id="mod-det-id" class="detail-val"></div>
+                        </div>
+                        <div>
+                            <span class="detail-label">Submitted At</span>
+                            <div id="mod-det-created" class="detail-val"></div>
+                        </div>
                     </div>
-                    <button class="btn btn-destructive" id="btn-mod-close" onclick="triggerPermanentClosure()">
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
-                        Irreversibly Close Case
-                    </button>
-                    <div id="mod-close-error" class="error-message hidden"></div>
+
+                    <div class="form-group">
+                        <label>Report Description</label>
+                        <div id="mod-det-desc" class="mod-description-box"></div>
+                    </div>
+
+                    <div id="mod-det-evidence-container" class="form-group hidden">
+                        <label>Scrubbed Evidence File</label>
+                        <div>
+                            <a id="mod-det-evidence" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-evidence-preview">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+                                View Scrubbed Image
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Status Workflow Actions -->
+                    <div id="mod-workflow-section" class="triage-section">
+                        <div class="section-heading-row">
+                            <h4>Status Workflow Transition</h4>
+                            <span class="section-subtitle">Forward-only deterministic lifecycle</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="mod-status-note">Public Status Update Note (Visible to Whistleblower)</label>
+                            <input type="text" id="mod-status-note" placeholder="e.g. Investigation underway; assigned to senior investigator.">
+                        </div>
+                        <div class="action-buttons" id="mod-status-actions">
+                            <!-- Transition buttons dynamically rendered based on allowed state transitions -->
+                        </div>
+                        <div id="mod-status-error" class="error-message hidden"></div>
+                    </div>
+
+                    <!-- Dead Drop Section -->
+                    <div class="triage-section">
+                        <div class="thread-header">
+                            <div class="thread-title">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                <h4>Dead Drop Message Thread</h4>
+                            </div>
+                            <div class="thread-badge">Confidential & Asynchronous</div>
+                        </div>
+
+                        <div class="thread-container" id="mod-thread">
+                            <!-- Messages populated dynamically -->
+                        </div>
+
+                        <form id="mod-reply-form" onsubmit="sendModReply(event)">
+                            <div class="form-group">
+                                <label for="mod-reply-text">Post Moderator Message</label>
+                                <textarea id="mod-reply-text" required placeholder="Send inquiry or guidance to the whistleblower..." style="min-height: 80px;"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="btn-mod-reply">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                                Send Dead Drop Message
+                            </button>
+                            <div id="mod-reply-error" class="error-message hidden"></div>
+                        </form>
+
+                        <div id="mod-thread-frozen-notice" class="hidden warning-box frozen-thread-notice">
+                            <div class="frozen-notice-header">
+                                <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                                <strong>Case Permanently Closed — Dead Drop Thread Frozen (ADR-0002)</strong>
+                            </div>
+                            <p>
+                                This report is permanently closed. In accordance with zero-knowledge data minimization (ADR-0002), message posting is permanently disabled.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Permanent Closure Section (ADR-0002) -->
+                    <div id="mod-close-section" class="triage-section mod-close-section">
+                        <div class="closure-header">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                            <h4>Permanent Case Closure & Data Minimization (ADR-0002)</h4>
+                        </div>
+                        <p class="closure-explanation">
+                            Permanently close this report. This action is irreversible: it immediately overwrites the description with the standardized Redaction Marker, physically shreds all evidence files from disk, and freezes the Dead Drop thread against all future writes.
+                        </p>
+                        <div class="form-group">
+                            <label for="mod-close-reason">Closing Resolution Note (Optional)</label>
+                            <input type="text" id="mod-close-reason" placeholder="Optional closing resolution note visible to whistleblower...">
+                        </div>
+                        <button type="button" class="btn btn-destructive" id="btn-mod-close" onclick="triggerPermanentClosure()">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                            Irreversibly Close Case
+                        </button>
+                        <div id="mod-close-error" class="error-message hidden"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -483,6 +520,53 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ACCESSIBLE PERMANENT CASE CLOSURE CONFIRMATION DIALOG MODAL (ADR-0002) -->
+    <div id="mod-close-confirm-modal" class="dialog-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="mod-close-modal-title" onclick="handleClosureModalOverlayClick(event)">
+        <div class="dialog-content" onclick="event.stopPropagation()">
+            <div class="dialog-header">
+                <div class="dialog-destructive-badge">
+                    <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                </div>
+                <h3 id="mod-close-modal-title" class="dialog-title" style="display: flex; align-items: center; gap: 8px;">
+                    Confirm Permanent Case Closure
+                </h3>
+                <p class="dialog-description">
+                    <strong>CRITICAL WARNING (ADR-0002):</strong> This action is <strong>IRREVERSIBLE</strong> and cannot be undone.
+                </p>
+                <button type="button" class="dialog-close" onclick="closeClosureModal()" aria-label="Close dialog">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="closure-modal-body">
+                <p style="font-size: 0.875rem; color: var(--muted-foreground); margin-bottom: 12px;">
+                    Executing permanent case closure enforces strict zero-knowledge data minimization and immunity against retrospective leaks:
+                </p>
+                <ul class="closure-consequences-list">
+                    <li>
+                        <strong>Redaction Marker:</strong> Report description will be permanently overwritten with <code>[REDACTED - CASE PERMANENTLY CLOSED]</code>.
+                    </li>
+                    <li>
+                        <strong>Evidence Shredding:</strong> Attached evidence files on disk will be physically unlinked and shredded.
+                    </li>
+                    <li>
+                        <strong>Dead Drop Frozen:</strong> Communication thread will be permanently frozen against all future writes.
+                    </li>
+                </ul>
+            </div>
+
+            <div id="mod-modal-close-error" class="error-message hidden" style="margin-bottom: 12px;"></div>
+
+            <div class="dialog-footer">
+                <button type="button" class="btn btn-outline" onclick="closeClosureModal()">Cancel (Keep Open)</button>
+                <button type="button" class="btn btn-destructive" id="btn-confirm-permanent-close" onclick="executePermanentClosure()">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                    Confirm Permanent Closure
+                </button>
+            </div>
         </div>
     </div>
 
